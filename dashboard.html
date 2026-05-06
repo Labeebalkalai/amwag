@@ -455,17 +455,49 @@
                     <!-- Dynamic Texts Management -->
                     <div style="margin-bottom: 1.5rem; border-top: 1px solid #eee; padding-top: 1.5rem; margin-top: 1.5rem;">
                         <h4 style="color: var(--ocean-blue); margin-bottom: 1rem;"><i class="fas fa-edit"></i> إدارة نصوص الموقع الرئيسية</h4>
-                        <div style="margin-bottom: 1rem;">
-                            <label style="display: block; margin-bottom: 0.4rem; font-weight: 600;">العنوان الرئيسي (Hero Title)</label>
-                            <input type="text" id="hero-title-input" placeholder="مذاق البحر الحقيقي" style="width: 100%; padding: 0.8rem; border-radius: 8px; border: 1px solid #e2e8f0; font-family: inherit;">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
+                            <div>
+                                <label style="display: block; margin-bottom: 0.4rem; font-weight: 600;">العنوان الرئيسي (Hero Title)</label>
+                                <input type="text" id="hero-title-input" placeholder="مذاق البحر الحقيقي" style="width: 100%; padding: 0.8rem; border-radius: 8px; border: 1px solid #e2e8f0; font-family: inherit;">
+                            </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 0.4rem; font-weight: 600;">وصف الهيرو (Hero Desc)</label>
+                                <input type="text" id="hero-desc-input" placeholder="استمتع بأشهى المأكولات..." style="width: 100%; padding: 0.8rem; border-radius: 8px; border: 1px solid #e2e8f0; font-family: inherit;">
+                            </div>
                         </div>
-                        <div style="margin-bottom: 1rem;">
-                            <label style="display: block; margin-bottom: 0.4rem; font-weight: 600;">نص الولاء (Loyalty CTA)</label>
-                            <input type="text" id="loyalty-cta-input" placeholder="سجل الآن وابدأ بجمع اللآلئ!" style="width: 100%; padding: 0.8rem; border-radius: 8px; border: 1px solid #e2e8f0; font-family: inherit;">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
+                            <div>
+                                <label style="display: block; margin-bottom: 0.4rem; font-weight: 600;">نص الولاء (Loyalty CTA)</label>
+                                <input type="text" id="loyalty-cta-input" placeholder="سجل الآن وابدأ بجمع اللآلئ!" style="width: 100%; padding: 0.8rem; border-radius: 8px; border: 1px solid #e2e8f0; font-family: inherit;">
+                            </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 0.4rem; font-weight: 600;">وصف الولاء (Loyalty Desc)</label>
+                                <input type="text" id="loyalty-desc-input" placeholder="كل طلب يمنحك نقطة..." style="width: 100%; padding: 0.8rem; border-radius: 8px; border: 1px solid #e2e8f0; font-family: inherit;">
+                            </div>
                         </div>
-                        <div style="margin-bottom: 1rem;">
-                            <label style="display: block; margin-bottom: 0.4rem; font-weight: 600;">عنوان "عن المطعم"</label>
-                            <input type="text" id="about-title-input" placeholder="عن أمواج الصياد" style="width: 100%; padding: 0.8rem; border-radius: 8px; border: 1px solid #e2e8f0; font-family: inherit;">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
+                            <div>
+                                <label style="display: block; margin-bottom: 0.4rem; font-weight: 600;">عنوان "عن المطعم"</label>
+                                <input type="text" id="about-title-input" placeholder="عن أمواج الصياد" style="width: 100%; padding: 0.8rem; border-radius: 8px; border: 1px solid #e2e8f0; font-family: inherit;">
+                            </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 0.4rem; font-weight: 600;">وصف "عن المطعم"</label>
+                                <textarea id="about-desc-input" placeholder="نحن فخورون بتقديم..." style="width: 100%; padding: 0.8rem; border-radius: 8px; border: 1px solid #e2e8f0; font-family: inherit; height: 80px; resize: vertical;"></textarea>
+                            </div>
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+                            <div>
+                                <label style="display: block; margin-bottom: 0.4rem; font-weight: 600;">ميزة 1</label>
+                                <input type="text" id="about-f1-input" placeholder="أسماك طازجة يومياً" style="width: 100%; padding: 0.8rem; border-radius: 8px; border: 1px solid #e2e8f0; font-family: inherit;">
+                            </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 0.4rem; font-weight: 600;">ميزة 2</label>
+                                <input type="text" id="about-f2-input" placeholder="طهاة محترفون" style="width: 100%; padding: 0.8rem; border-radius: 8px; border: 1px solid #e2e8f0; font-family: inherit;">
+                            </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 0.4rem; font-weight: 600;">ميزة 3</label>
+                                <input type="text" id="about-f3-input" placeholder="إطلالة بحرية خلابة" style="width: 100%; padding: 0.8rem; border-radius: 8px; border: 1px solid #e2e8f0; font-family: inherit;">
+                            </div>
                         </div>
                         <div style="margin-bottom: 1rem;">
                             <label style="display: block; margin-bottom: 0.4rem; font-weight: 600;">رابط خريطة جوجل (Embed URL)</label>

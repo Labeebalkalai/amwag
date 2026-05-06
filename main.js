@@ -25,6 +25,35 @@ let currentDiscount = 0;
 let loggedInCustomer = JSON.parse(localStorage.getItem('loggedInCustomer')) || null;
 let customerPoints = 0; 
 
+// --- PWA & App Capabilities ---
+function initAppCapabilities() {
+    // Request Notification Permission
+    if ("Notification" in window) {
+        if (Notification.permission !== "granted" && Notification.permission !== "denied") {
+            // Prompt on first meaningful interaction or after a delay
+            setTimeout(() => {
+                Notification.requestPermission().then(permission => {
+                    if (permission === "granted") {
+                        console.log("App: Notification permission granted.");
+                    }
+                });
+            }, 5000);
+        }
+    }
+
+    // Audio Context unlock for mobile (to allow sounds)
+    document.addEventListener('click', () => {
+        const audio = new Audio();
+        audio.src = 'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==';
+        audio.play().catch(() => {});
+    }, { once: true });
+}
+
+function playNotificationSound() {
+    const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3');
+    audio.play().catch(err => console.log('Sound blocked:', err));
+}
+
 // Track if Firebase menu has loaded (to avoid flash of old data)
 let firebaseMenuLoaded = false;
 
@@ -131,20 +160,44 @@ function listenToGlobalUpdates() {
             const el = document.getElementById('hero-title');
             if (el) el.innerText = globalSettings.heroTitle;
         }
+        if (globalSettings.heroDesc) {
+            const el = document.getElementById('hero-desc');
+            if (el) el.innerText = globalSettings.heroDesc;
+        }
         if (globalSettings.loyaltyCta) {
             const el = document.getElementById('loyalty-cta');
             if (el) el.innerText = globalSettings.loyaltyCta;
+        }
+        if (globalSettings.loyaltyDesc) {
+            const el = document.getElementById('loyalty-desc');
+            if (el) el.innerHTML = globalSettings.loyaltyDesc;
         }
         if (globalSettings.aboutTitle) {
             const el = document.getElementById('about-title');
             if (el) el.innerText = globalSettings.aboutTitle;
         }
+        if (globalSettings.aboutDesc) {
+            const el = document.getElementById('about-desc');
+            if (el) el.innerText = globalSettings.aboutDesc;
+        }
+        if (globalSettings.aboutF1) {
+            const el = document.getElementById('about-f1');
+            if (el) el.innerText = globalSettings.aboutF1;
+        }
+        if (globalSettings.aboutF2) {
+            const el = document.getElementById('about-f2');
+            if (el) el.innerText = globalSettings.aboutF2;
+        }
+        if (globalSettings.aboutF3) {
+            const el = document.getElementById('about-f3');
+            if (el) el.innerText = globalSettings.aboutF3;
+        }
+
         if (globalSettings.googleMapsUrl) {
             const iframe = document.getElementById('google-map-iframe');
             const directionsBtn = document.getElementById('get-directions-btn');
             if (iframe) iframe.src = globalSettings.googleMapsUrl;
             
-            // Try to extract the search query to make the directions link more useful if it's not a full link
             if (directionsBtn && !globalSettings.googleMapsUrl.startsWith('http')) {
                  directionsBtn.href = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(globalSettings.googleMapsUrl)}`;
             }
@@ -364,6 +417,176 @@ function sendChatMessage() {
 
     input.value = '';
     input.focus();
+}
+
+// ===================================================
+// ===    ORDER TRACKING SYSTEM - Customer Side     ===
+// ===================================================
+
+let trackingListener = null;
+
+function openTrackingModal(orderId = null) {
+    const modal = document.getElementById('tracking-modal');
+    if (!modal) return;
+    
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+
+    if (orderId) {
+        document.getElementById('track-order-id').value = orderId;
+        initTracking(orderId);
+    } else {
+        resetTrackingView();
+    }
+}
+
+function closeTrackingModal() {
+    const modal = document.getElementById('tracking-modal');
+    if (modal) modal.style.display = 'none';
+    document.body.style.overflow = '';
+    
+    // Stop listening if any
+    if (trackingListener) {
+        trackingListener.off();
+        trackingListener = null;
+    }
+}
+
+function searchOrderToTrack() {
+    let id = document.getElementById('track-order-id').value.trim().toUpperCase();
+    if (!id) {
+        showTrackingError("يرجى إدخال رقم الطلب أولاً.");
+        return;
+    }
+    
+    // Auto-prepend ORD- if user enters just the number
+    if (!id.startsWith('ORD-')) {
+        id = 'ORD-' + id;
+    }
+    
+    initTracking(id);
+}
+
+function initTracking(orderId) {
+    if (!isFirebaseEnabled || !db) {
+        showTrackingError("نظام التتبع غير متوفر حالياً.");
+        return;
+    }
+
+    showTrackingError(null); 
+    console.log("Searching for Order ID:", orderId);
+    
+    // Show loading state
+    const searchForm = document.getElementById('tracking-search-form');
+    const loader = document.getElementById('tracking-loader');
+    if (searchForm) searchForm.style.display = 'none';
+    if (loader) loader.style.display = 'block';
+    
+    db.ref('orders/' + orderId).once('value').then(snapshot => {
+        const order = snapshot.val();
+        
+        // Hide loader
+        if (searchForm) searchForm.style.display = 'flex';
+        if (loader) loader.style.display = 'none';
+
+        if (!order) {
+            showTrackingError("لم يتم العثور على طلب بهذا الرقم (#" + orderId + "). يرجى التأكد من الرقم والمحاولة مرة أخرى.");
+            return;
+        }
+
+        // Show Content
+        document.getElementById('tracking-input-area').style.display = 'none';
+        document.getElementById('tracking-content').style.display = 'block';
+        
+        // Populate Basic Info
+        document.getElementById('display-track-id').innerText = '#' + orderId;
+        document.getElementById('display-track-eta').innerText = order.preparationTime || '--:--';
+        
+        // Render Items
+        const itemsList = document.getElementById('tracking-items-summary');
+        itemsList.innerHTML = order.items.map(item => `
+            <div style="font-size: 0.85rem; padding: 5px 0; border-bottom: 1px solid rgba(0,0,0,0.05);">
+                <strong>${item.name}</strong> (x${item.qty})
+            </div>
+        `).join('');
+
+        // Start Real-time Listening
+        if (trackingListener) trackingListener.off();
+        trackingListener = db.ref('orders/' + orderId);
+        trackingListener.on('value', snap => {
+            const updatedOrder = snap.val();
+            if (updatedOrder) {
+                updateTrackingStepper(updatedOrder.status);
+            }
+        });
+    }).catch(err => {
+        console.error("Tracking Error:", err);
+        showTrackingError("حدث خطأ أثناء جلب بيانات الطلب.");
+    });
+}
+
+function updateTrackingStepper(status) {
+    const stages = ['pending', 'preparing', 'ready', 'delivered'];
+    const currentIndex = stages.indexOf(status || 'pending');
+
+    stages.forEach((stage, index) => {
+        const el = document.getElementById('step-' + stage);
+        const line = el.previousElementSibling; // step-line
+
+        el.classList.remove('active', 'completed');
+        if (line && line.classList.contains('step-line')) {
+            line.classList.remove('completed');
+        }
+
+        if (index < currentIndex) {
+            el.classList.add('completed');
+            if (line && line.classList.contains('step-line')) line.classList.add('completed');
+        } else if (index === currentIndex) {
+            el.classList.add('active');
+            if (line && line.classList.contains('step-line')) {
+                // If it's active, the line before it should be completed
+                line.classList.add('completed');
+            }
+        }
+    });
+
+    // Special: if delivered, play a small sound or effect
+    if (status === 'delivered') {
+        // You could trigger confetti here if a library is loaded
+        console.log("Order Delivered! 🎉");
+    }
+}
+
+function resetTrackingView() {
+    document.getElementById('tracking-input-area').style.display = 'block';
+    document.getElementById('tracking-content').style.display = 'none';
+    const searchForm = document.getElementById('tracking-search-form');
+    const loader = document.getElementById('tracking-loader');
+    if (searchForm) searchForm.style.display = 'flex';
+    if (loader) loader.style.display = 'none';
+    
+    document.getElementById('track-order-id').value = '';
+    showTrackingError(null);
+    if (trackingListener) {
+        trackingListener.off();
+        trackingListener = null;
+    }
+}
+
+function showTrackingError(msg) {
+    const errEl = document.getElementById('tracking-error');
+    if (msg) {
+        errEl.innerText = msg;
+        errEl.style.display = 'block';
+    } else {
+        errEl.style.display = 'none';
+    }
+}
+
+function contactSupportForOrder() {
+    const id = document.getElementById('display-track-id').innerText;
+    const msg = encodeURIComponent(`مرحباً أمواج الصياد، لدي استفسار بخصوص طلبي رقم ${id}`);
+    window.open(`https://wa.me/966546117271?text=${msg}`, '_blank');
 }
 
 
@@ -673,68 +896,96 @@ function checkout() {
 
     message += `\n💰 *الإجمالي النهائي: ${total} ر.س*`;
 
-    // ----- LOYALTY POINTS FIREBASE SAVE -----
+    // Get sequential order ID and save order
     if (isFirebaseEnabled && db) {
-        const targetPhone = loggedInCustomer ? loggedInCustomer.phone : phone;
-        if (targetPhone) {
-            const customerRef = db.ref('customers/' + targetPhone);
-            customerRef.once('value').then(snapshot => {
-                let customerData = snapshot.val();
-                if (!customerData) {
-                    customerData = { name, phone, email, points: 0, lastPurchaseDate: new Date().toISOString() };
-                }
-                customerData.lastPurchaseDate = new Date().toISOString();
-                const pointsToAdd = globalSettings && globalSettings.pointsPerOrder ? parseInt(globalSettings.pointsPerOrder) : 1;
-                const threshold = globalSettings && globalSettings.pointsThreshold ? parseInt(globalSettings.pointsThreshold) : 10;
-                
-                if (isRedeeming && customerData.points >= threshold) customerData.points -= threshold;
-                customerData.points += pointsToAdd; 
-                customerRef.set(customerData);
+        db.ref('settings/orderCounter').transaction((currentCount) => {
+            return (currentCount || 0) + 1;
+        }, (error, committed, snapshot) => {
+            if (error) {
+                console.error("Order Counter Transaction Failed:", error);
+                // Fallback to timestamp if transaction fails
+                saveOrder('ORD-' + Date.now());
+            } else if (committed) {
+                const newId = snapshot.val();
+                saveOrder('ORD-' + newId);
+            }
+        });
+    } else {
+        // Fallback for non-firebase
+        const fallbackId = 'ORD-' + Date.now();
+        saveOrder(fallbackId);
+    }
 
-                // Save Order Invoice and Tracking
-                const orderId = 'ORD-' + Date.now();
-                const orderData = {
-                    orderId,
-                    customerName: name,
-                    customerPhone: targetPhone,
-                    date: new Date().toLocaleString('ar-SA'),
-                    timestamp: Date.now(),
-                    total: total,
-                    items: currentCartData.map(i => ({ 
-                        name: i.name, 
-                        qty: i.quantity, 
-                        price: i.price,
-                        prep: i.selectedPrep || '',
-                        weight: i.selectedWeight || ''
-                    })),
-                    payment: paymentMethod,
-                    type: orderType,
-                    notes: notes || '',
-                    preparationTime: formattedPrepTime || 'فوري',
-                    status: 'pending' // Initial status
-                };
+    function saveOrder(orderId) {
+        // ----- LOYALTY POINTS FIREBASE SAVE -----
+        if (isFirebaseEnabled && db) {
+            const targetPhone = loggedInCustomer ? loggedInCustomer.phone : phone;
+            if (targetPhone) {
+                const customerRef = db.ref('customers/' + targetPhone);
+                customerRef.once('value').then(snapshot => {
+                    let customerData = snapshot.val();
+                    if (!customerData) {
+                        customerData = { name, phone, email, points: 0, lastPurchaseDate: new Date().toISOString() };
+                    }
+                    customerData.lastPurchaseDate = new Date().toISOString();
+                    const pointsToAdd = globalSettings && globalSettings.pointsPerOrder ? parseInt(globalSettings.pointsPerOrder) : 1;
+                    const threshold = globalSettings && globalSettings.pointsThreshold ? parseInt(globalSettings.pointsThreshold) : 10;
+                    
+                    if (isRedeeming && customerData.points >= threshold) customerData.points -= threshold;
+                    customerData.points += pointsToAdd; 
+                    customerRef.set(customerData);
 
-                // 1. Save to customer's history
-                db.ref('customers/' + targetPhone + '/orders/' + orderId).set(orderData);
-                
-                // 2. Save to global orders node for Admin Dashboard
-                db.ref('orders/' + orderId).set(orderData);
-            }).catch(err => console.error("Firebase Save Error:", err));
+                    // Save Order Invoice and Tracking
+                    const orderData = {
+                        orderId,
+                        customerName: name,
+                        customerPhone: targetPhone,
+                        date: new Date().toLocaleString('ar-SA'),
+                        timestamp: Date.now(),
+                        total: total,
+                        items: currentCartData.map(i => ({ 
+                            name: i.name, 
+                            qty: i.quantity, 
+                            price: i.price,
+                            prep: i.selectedPrep || '',
+                            weight: i.selectedWeight || ''
+                        })),
+                        payment: paymentMethod,
+                        type: orderType,
+                        notes: notes || '',
+                        preparationTime: formattedPrepTime || 'فوري',
+                        status: 'pending' // Initial status
+                    };
+
+                    // 1. Save to customer's history
+                    db.ref('customers/' + targetPhone + '/orders/' + orderId).set(orderData);
+                    
+                    // 2. Save to global orders node for Admin Dashboard
+                    db.ref('orders/' + orderId).set(orderData);
+                }).catch(err => console.error("Firebase Save Error:", err));
+            }
+        }
+        // ----------------------------------------
+
+        const encodedMessage = encodeURIComponent(message + `\n🔢 *رقم الطلب:* ${orderId}`);
+        const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
+
+        window.open(whatsappUrl, '_blank');
+
+        cart = [];
+        updateCart();
+        toggleCart();
+        
+        document.getElementById('order-notes').value = '';
+        if(redeemCheckbox) redeemCheckbox.checked = false;
+
+        // Trigger Tracking for the newly created order
+        if (isFirebaseEnabled) {
+            setTimeout(() => {
+                openTrackingModal(orderId);
+            }, 1500);
         }
     }
-    // ----------------------------------------
-
-    const encodedMessage = encodeURIComponent(message);
-    const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
-
-    window.open(whatsappUrl, '_blank');
-
-    cart = [];
-    updateCart();
-    toggleCart();
-    
-    document.getElementById('order-notes').value = '';
-    if(redeemCheckbox) redeemCheckbox.checked = false;
 }
 
 // --- Authentication & Profile Logic ---
@@ -805,7 +1056,8 @@ function openProfileModal() {
                                         <div style="font-size: 0.8rem; color: #94a3b8;">${order.date}</div>
                                         <div style="font-weight: bold; margin-top: 5px; color: var(--ocean-blue);">${order.total} <span class="icon-saudi_riyal"></span></div>
                                     </div>
-                                    <div style="display: flex; gap: 8px;">
+                                    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                                        <button onclick='openTrackingModal("${order.orderId}")' style="padding: 8px 12px; background: var(--coral-orange); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 0.8rem; font-weight: bold;"><i class="fas fa-truck"></i> تتبع</button>
                                         <button onclick='printInvoice("${order.orderId}", ${JSON.stringify(order)})' style="padding: 8px 12px; background: #64748b; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 0.8rem;"><i class="fas fa-print"></i> طباعة</button>
                                         <button onclick='downloadInvoicePDF("${order.orderId}", ${JSON.stringify(order)})' style="padding: 8px 12px; background: var(--ocean-blue); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 0.8rem;"><i class="fas fa-file-pdf"></i> تحميل PDF</button>
                                     </div>
@@ -1737,5 +1989,26 @@ function downloadInvoicePDF(orderId, order) {
     // Since the image is base64, we don't need to wait for onload
     generatePdf();
 }
+
+// --- Initialization ---
+window.addEventListener('load', () => {
+    initAppCapabilities();
+    initAdaptiveUI();
+    initVisualEffects();
+    initVoiceAssistant();
+    listenToGlobalUpdates();
+    
+    // Existing initialization calls if any
+    updateAuthUI();
+    renderMenu();
+    listenToNewOrders();
+    initRatingSystem();
+    renderReviews();
+    checkRestaurantStatus();
+    loadAnnouncementSettings();
+    renderStaffSection();
+    renderSupportModal();
+    listenToChatMessages();
+});
 
 

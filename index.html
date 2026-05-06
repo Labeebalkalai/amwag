@@ -24,6 +24,7 @@
             <ul>
                 <li><a href="index.html">الرئيسية</a></li>
                 <li><a href="#menu">المنيو الرقمي</a></li>
+                <li><a href="#" onclick="openTrackingModal()" style="color: var(--coral-orange); font-weight: bold;"><i class="fas fa-truck"></i> تتبع طلبك</a></li>
                 <li><a href="#reservations">حجز جلسة</a></li>
                 <li><a href="#about">عن المطعم</a></li>
                 <li><a href="#contact">اتصل بنا</a></li>
@@ -48,6 +49,7 @@
         <ul>
             <li><a href="index.html" onclick="closeMobileNav()"><i class="fas fa-home"></i> الرئيسية</a></li>
             <li><a href="#menu" onclick="closeMobileNav()"><i class="fas fa-utensils"></i> المنيو الرقمي</a></li>
+            <li><a href="#" onclick="openTrackingModal(); closeMobileNav();" style="color: var(--coral-orange); font-weight: bold;"><i class="fas fa-truck"></i> تتبع طلبك</a></li>
             <li><a href="#reservations" onclick="closeMobileNav()"><i class="fas fa-calendar-alt"></i> حجز جلسة</a></li>
             <li><a href="#about" onclick="closeMobileNav()"><i class="fas fa-info-circle"></i> عن المطعم</a></li>
             <li><a href="#contact" onclick="closeMobileNav()"><i class="fas fa-map-marker-alt"></i> اتصل بنا</a></li>
@@ -60,7 +62,7 @@
     <!-- Hero Section -->
     <section class="hero">
         <h1 id="hero-title">مذاق البحر الحقيقي</h1>
-        <p>استمتع بأشهى المأكولات البحرية الطازجة المحضرة بكل حب وإتقان في أجواء بحرية ساحرة.</p>
+        <p id="hero-desc">استمتع بأشهى المأكولات البحرية الطازجة المحضرة بكل حب وإتقان في أجواء بحرية ساحرة.</p>
         <a href="#menu" class="btn-primary">اطلب الآن</a>
     </section>
 
@@ -70,7 +72,7 @@
             <div style="font-size: 2.5rem; animation: pulse 2s infinite;"><i class="fas fa-gift"></i></div>
             <div style="text-align: right;">
                 <h3 id="loyalty-cta" style="margin: 0; font-size: 1.4rem;">سجل الآن وابدأ بجمع اللآلئ! ⭐</h3>
-                <p style="margin: 0; font-size: 1rem; opacity: 0.9;">كل طلب يمنحك نقطة.. اجمع 100 نقطة واحصل على <strong>وجبة مجانية فاخرة</strong> من اختيارك!</p>
+                <p id="loyalty-desc" style="margin: 0; font-size: 1rem; opacity: 0.9;">كل طلب يمنحك نقطة.. اجمع 100 نقطة واحصل على <strong>وجبة مجانية فاخرة</strong> من اختيارك!</p>
             </div>
             <button onclick="openProfileModal()" style="background: var(--deep-blue); color: white; border: none; padding: 10px 25px; border-radius: 50px; font-weight: bold; cursor: pointer; transition: 0.3s; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">انضم إلينا الآن</button>
         </div>
@@ -97,11 +99,11 @@
         <div class="grid" style="align-items: center;">
             <div>
                 <h2 id="about-title" class="section-title" style="text-align: right;">عن أمواج الصياد</h2>
-                <p>نحن فخورون بتقديم أفضل أنواع الأسماك والقشريات الطازجة يومياً من البحر مباشرة إلى طاولتكم. نجمع بين الأصالة في الطعم والحداثة في التقديم لنخلق لكم تجربة لا تُنسى.</p>
+                <p id="about-desc">نحن فخورون بتقديم أفضل أنواع الأسماك والقشريات الطازجة يومياً من البحر مباشرة إلى طاولتكم. نجمع بين الأصالة في الطعم والحداثة في التقديم لنخلق لكم تجربة لا تُنسى.</p>
                 <div style="margin-top: 2rem;">
-                    <span style="display: block; margin-bottom: 0.5rem;"><i class="fas fa-check-circle" style="color: var(--sandy-gold);"></i> أسماك طازجة يومياً</span>
-                    <span style="display: block; margin-bottom: 0.5rem;"><i class="fas fa-check-circle" style="color: var(--sandy-gold);"></i> طهاة محترفون</span>
-                    <span style="display: block; margin-bottom: 0.5rem;"><i class="fas fa-check-circle" style="color: var(--sandy-gold);"></i> إطلالة بحرية خلابة</span>
+                    <span style="display: block; margin-bottom: 0.5rem;"><i class="fas fa-check-circle" style="color: var(--sandy-gold);"></i> <span id="about-f1">أسماك طازجة يومياً</span></span>
+                    <span style="display: block; margin-bottom: 0.5rem;"><i class="fas fa-check-circle" style="color: var(--sandy-gold);"></i> <span id="about-f2">طهاة محترفون</span></span>
+                    <span style="display: block; margin-bottom: 0.5rem;"><i class="fas fa-check-circle" style="color: var(--sandy-gold);"></i> <span id="about-f3">إطلالة بحرية خلابة</span></span>
                     <div id="opening-hours-display" style="margin-top: 1.5rem; padding: 1rem; background: var(--bg-main); border-radius: 12px; border: 1px solid var(--glass-border); color: var(--text-main);">
                         <h4 style="margin-bottom: 0.5rem; color: var(--ocean-blue);"><i class="fas fa-clock"></i> أوقات العمل</h4>
                         <p id="hours-text">يومياً من <span id="display-open-time">09:00 ص</span> حتى <span id="display-close-time">11:00 م</span></p>
@@ -564,6 +566,88 @@
                     <div><h4 style="margin:0;">جاري التحميل...</h4></div>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- Order Tracking Modal -->
+    <div id="tracking-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 7000; align-items: center; justify-content: center; backdrop-filter: blur(8px);">
+        <div class="glass-panel" style="padding: 2.5rem; border-radius: 24px; width: 95%; max-width: 600px; position: relative; color: var(--text-main); animation: popupAnim 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+            <button onclick="closeTrackingModal()" style="position: absolute; top: 20px; left: 20px; border: none; background: rgba(0,0,0,0.05); width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text-muted); transition: 0.3s;"><i class="fas fa-times"></i></button>
+            
+            <div style="text-align: center; margin-bottom: 2rem;">
+                <div style="width: 70px; height: 70px; background: linear-gradient(135deg, var(--ocean-blue), var(--primary-blue)); color: white; border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 2rem; margin: 0 auto 1.5rem; box-shadow: 0 10px 20px rgba(0,0,0,0.1);">
+                    <i class="fas fa-route"></i>
+                </div>
+                <h2 style="font-family: 'Playfair Display', serif; margin-bottom: 0.5rem;">تتبع حالة طلبك</h2>
+                <p style="color: var(--text-muted); font-size: 0.95rem;">تابع مراحل تحضير وتوصيل وجبتك الشهية في وقتها الحقيقي</p>
+            </div>
+
+            <!-- ID Input (for Guest) -->
+            <div id="tracking-input-area" style="margin-bottom: 2rem;">
+                <div id="tracking-search-form" style="display: flex; gap: 10px; background: rgba(255,255,255,0.05); padding: 5px; border-radius: 15px; border: 1px solid var(--glass-border);">
+                    <input type="text" id="track-order-id" placeholder="أدخل رقم الطلب (مثلاً: ORD-123...)" style="flex: 1; padding: 12px 15px; border: none; background: transparent; color: var(--text-main); outline: none; font-family: inherit;">
+                    <button onclick="searchOrderToTrack()" class="btn-primary" style="padding: 10px 25px; border-radius: 12px;">تتبع الآن</button>
+                </div>
+                <!-- Loading State -->
+                <div id="tracking-loader" style="display: none; text-align: center; padding: 2rem;">
+                    <i class="fas fa-spinner fa-spin" style="font-size: 2rem; color: var(--ocean-blue);"></i>
+                    <p style="margin-top: 10px;">جاري البحث عن طلبك...</p>
+                </div>
+            </div>
+
+            <!-- Tracking Content (Hidden initially) -->
+            <div id="tracking-content" style="display: none;">
+                <div style="background: var(--bg-card); padding: 1.5rem; border-radius: 20px; border: 1px solid var(--glass-border); margin-bottom: 2rem; position: relative; overflow: hidden;">
+                    <div id="tracking-order-info" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 1px dashed var(--glass-border); padding-bottom: 1rem;">
+                        <div>
+                            <span style="display: block; font-size: 0.8rem; color: var(--text-muted);">رقم الطلب</span>
+                            <strong id="display-track-id" style="color: var(--ocean-blue);">#ORD-000000</strong>
+                        </div>
+                        <div style="text-align: left;">
+                            <span style="display: block; font-size: 0.8rem; color: var(--text-muted);">الوقت المتوقع</span>
+                            <strong id="display-track-eta">--:--</strong>
+                        </div>
+                    </div>
+
+                    <!-- Stepper -->
+                    <div class="stepper-container">
+                        <div class="step" id="step-pending">
+                            <div class="step-icon"><i class="fas fa-clipboard-list"></i></div>
+                            <div class="step-label">تم الاستلام</div>
+                        </div>
+                        <div class="step-line"></div>
+                        <div class="step" id="step-preparing">
+                            <div class="step-icon"><i class="fas fa-fire-burner"></i></div>
+                            <div class="step-label">جاري التحضير</div>
+                        </div>
+                        <div class="step-line"></div>
+                        <div class="step" id="step-ready">
+                            <div class="step-icon"><i class="fas fa-box-open"></i></div>
+                            <div class="step-label">جاهز للاستلام</div>
+                        </div>
+                        <div class="step-line"></div>
+                        <div class="step" id="step-delivered">
+                            <div class="step-icon"><i class="fas fa-check-double"></i></div>
+                            <div class="step-label">تم التسليم</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="tracking-items-summary" style="max-height: 150px; overflow-y: auto; padding-left: 10px; margin-bottom: 1.5rem;">
+                    <!-- Items will be listed here -->
+                </div>
+
+                <div style="display: flex; gap: 10px;">
+                    <button onclick="contactSupportForOrder()" style="flex: 1; padding: 12px; background: #25d366; color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                        <i class="fab fa-whatsapp"></i> استفسار عن الطلب
+                    </button>
+                    <button onclick="resetTrackingView()" style="padding: 12px; background: var(--bg-main); color: var(--text-main); border: 1px solid var(--glass-border); border-radius: 12px; cursor: pointer;">
+                        تتبع طلب آخر
+                    </button>
+                </div>
+            </div>
+            
+            <p id="tracking-error" style="color: #ef4444; text-align: center; margin-top: 1rem; display: none; font-size: 0.9rem;"></p>
         </div>
     </div>
 

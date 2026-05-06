@@ -451,9 +451,15 @@ function getAllSettings() {
         eventMode: document.getElementById('setting-event-mode').checked,
         pointsPerOrder: document.getElementById('setting-points-per-order').value,
         pointsThreshold: document.getElementById('setting-points-threshold').value,
-        heroTitle: document.getElementById('hero-title-input').value,
         loyaltyCta: document.getElementById('loyalty-cta-input').value,
+        loyaltyDesc: document.getElementById('loyalty-desc-input').value,
+        heroTitle: document.getElementById('hero-title-input').value,
+        heroDesc: document.getElementById('hero-desc-input').value,
         aboutTitle: document.getElementById('about-title-input').value,
+        aboutDesc: document.getElementById('about-desc-input').value,
+        aboutF1: document.getElementById('about-f1-input').value,
+        aboutF2: document.getElementById('about-f2-input').value,
+        aboutF3: document.getElementById('about-f3-input').value,
         googleMapsUrl: document.getElementById('google-maps-url-input').value
     };
 }
@@ -523,8 +529,14 @@ function loadSettingsFromObj(settings) {
     if (settings.pointsThreshold !== undefined) document.getElementById('setting-points-threshold').value = settings.pointsThreshold;
 
     if (settings.heroTitle) document.getElementById('hero-title-input').value = settings.heroTitle;
+    if (settings.heroDesc) document.getElementById('hero-desc-input').value = settings.heroDesc;
     if (settings.loyaltyCta) document.getElementById('loyalty-cta-input').value = settings.loyaltyCta;
+    if (settings.loyaltyDesc) document.getElementById('loyalty-desc-input').value = settings.loyaltyDesc;
     if (settings.aboutTitle) document.getElementById('about-title-input').value = settings.aboutTitle;
+    if (settings.aboutDesc) document.getElementById('about-desc-input').value = settings.aboutDesc;
+    if (settings.aboutF1) document.getElementById('about-f1-input').value = settings.aboutF1;
+    if (settings.aboutF2) document.getElementById('about-f2-input').value = settings.aboutF2;
+    if (settings.aboutF3) document.getElementById('about-f3-input').value = settings.aboutF3;
     if (settings.googleMapsUrl) document.getElementById('google-maps-url-input').value = settings.googleMapsUrl;
 }
 
@@ -963,9 +975,14 @@ function renderAdminChatList(chats) {
                 <h4>${name}</h4>
                 <small>${lastMsg.substring(0, 35)}${lastMsg.length > 35 ? '...' : ''}</small>
             </div>
-            <div style="text-align:left; flex-shrink:0;">
+            <div style="text-align:left; flex-shrink:0; display:flex; flex-direction:column; align-items:flex-end;">
                 <small style="color:var(--text-muted); font-size:0.7rem;">${timeStr}</small>
-                ${isUnread ? '<div class="unread-badge" style="margin-top:4px;">●</div>' : ''}
+                <div style="display:flex; gap:8px; align-items:center; margin-top:4px;">
+                    ${isUnread ? '<div class="unread-badge">●</div>' : ''}
+                    <button onclick="deleteAdminChat('${chatId}', event)" style="background:none; border:none; color:#ef4444; cursor:pointer; padding:2px; font-size:0.9rem;" title="حذف المحادثة">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </div>
             </div>
         `;
         listEl.appendChild(item);
@@ -980,6 +997,26 @@ function renderAdminChatList(chats) {
         } else {
             sidebarBadge.style.display = 'none';
         }
+    }
+}
+
+function deleteAdminChat(chatId, event) {
+    if (event) event.stopPropagation();
+    if (!confirm('هل أنت متأكد من حذف هذه المحادثة نهائياً؟')) return;
+    
+    if (isFirebaseEnabled && db) {
+        db.ref('chats/' + chatId).remove().then(() => {
+            if (activeChatId === chatId) {
+                activeChatId = null;
+                document.getElementById('admin-chat-name').innerText = 'اختر محادثة';
+                document.getElementById('admin-chat-status').innerText = 'اختر عميلاً من القائمة للبدء';
+                document.getElementById('admin-chat-messages').innerHTML = `<div style="text-align:center; color:var(--text-muted); padding:3rem;">
+                    <i class="fas fa-comment-dots" style="font-size:3rem; margin-bottom:1rem; display:block; opacity:0.3;"></i>
+                    <p>اختر محادثة من القائمة لعرض الرسائل</p>
+                </div>`;
+                document.getElementById('admin-chat-input-area').style.display = 'none';
+            }
+        }).catch(err => alert('خطأ في الحذف: ' + err.message));
     }
 }
 
@@ -1143,9 +1180,39 @@ function deleteReview(key) {
     }
 }
 
+// --- PWA & App Capabilities ---
+function initAppCapabilities() {
+    // Request Notification Permission
+    if ("Notification" in window) {
+        if (Notification.permission !== "granted" && Notification.permission !== "denied") {
+            setTimeout(() => {
+                Notification.requestPermission();
+            }, 5000);
+        }
+    }
+
+    // Audio Context unlock
+    document.addEventListener('click', () => {
+        const audio = new Audio();
+        audio.src = 'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==';
+        audio.play().catch(() => {});
+    }, { once: true });
+}
+
+function playNotificationSound() {
+    const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3');
+    audio.play().catch(err => console.log('Sound blocked:', err));
+}
+
 // Load theme on startup
 document.addEventListener('DOMContentLoaded', () => {
+    initAppCapabilities();
     const savedTheme = localStorage.getItem('user-theme') || 'morning';
     document.body.setAttribute('data-theme', savedTheme);
     initReviewsManagement();
+    
+    // Additional Admin Inits
+    getAllSettings();
+    listenToChats();
+    initMenuManagement();
 });
