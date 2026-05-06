@@ -24,10 +24,35 @@ if (isFirebaseEnabled) {
 
 let menuData = JSON.parse(localStorage.getItem('restaurantMenu')) || initialMenuItems;
 
-let reservationsData = JSON.parse(localStorage.getItem('reservations')) || [
-    { id: 1, name: "أحمد محمد", date: "2024-05-10", time: "20:00", persons: 4, status: "confirmed" },
-    { id: 2, name: "سارة علي", date: "2024-05-10", time: "21:30", persons: 2, status: "pending" }
-];
+let reservationsData = [];
+
+// Real-time Reservations Sync with Sound Notification
+if (isFirebaseEnabled && db) {
+    let initialReservationsLoaded = false;
+    db.ref('reservations').on('value', (snapshot) => {
+        const data = snapshot.val();
+        const newData = [];
+        if (data) {
+            Object.keys(data).forEach(key => {
+                newData.push({ id: key, ...data[key] });
+            });
+            // Sort by createdAt (newest first)
+            newData.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+        }
+        
+        // Play sound if a new reservation arrives (skip first load)
+        if (initialReservationsLoaded && newData.length > reservationsData.length) {
+            playNotificationSound();
+        }
+
+        reservationsData = newData;
+        renderReservations();
+        updateDashboardStats();
+        initialReservationsLoaded = true;
+    });
+} else {
+    reservationsData = JSON.parse(localStorage.getItem('reservations')) || [];
+}
 
 // Tab Switching
 function showSection(sectionId) {
@@ -86,7 +111,7 @@ function renderMenuTable() {
         const isUnavailable = unavailable.includes(item.id);
         const tr = document.createElement('tr');
         tr.style.borderBottom = '1px solid #eee';
-        if (isUnavailable) tr.style.background = '#fff5f5';
+        if (isUnavailable) tr.style.opacity = '0.5';
         tr.innerHTML = `
             <td style="padding: 1rem;">
                 <div style="display: flex; align-items: center; gap: 10px;">
@@ -199,7 +224,8 @@ function renderReservations() {
                 </span>
             </td>
             <td style="padding: 1rem;">
-                ${res.status === 'pending' ? `<button onclick="updateResStatus(${res.id}, 'confirmed')" class="btn-primary" style="padding: 5px 15px; font-size: 0.8rem; background: #28a745;">تأكيد</button>` : `<button onclick="updateResStatus(${res.id}, 'pending')" style="background: none; border: 1px solid #ddd; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 0.8rem;">إلغاء</button>`}
+                ${res.status === 'pending' ? `<button onclick="updateResStatus('${res.id}', 'confirmed')" class="btn-primary" style="padding: 5px 15px; font-size: 0.8rem; background: #28a745; margin-left: 5px;">تأكيد</button>` : `<button onclick="updateResStatus('${res.id}', 'pending')" style="background: none; border: 1px solid #ddd; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 0.8rem; margin-left: 5px;">إعادة تعليق</button>`}
+                <button onclick="deleteReservation('${res.id}')" style="background: none; border: 1px solid #ff4d4d; color: #ff4d4d; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 0.8rem;"><i class="fas fa-trash"></i></button>
             </td>
         `;
         
@@ -223,9 +249,27 @@ function renderReservations() {
 }
 
 function updateResStatus(id, status) {
-    const index = reservationsData.findIndex(r => r.id === id);
-    if (index !== -1) {
-        reservationsData[index].status = status;
+    if (isFirebaseEnabled && db) {
+        db.ref('reservations/' + id).update({ status }).then(() => {
+            console.log("Reservation status updated in Firebase");
+        });
+    } else {
+        const index = reservationsData.findIndex(r => r.id === id);
+        if (index !== -1) {
+            reservationsData[index].status = status;
+            saveData();
+            renderReservations();
+            updateDashboardStats();
+        }
+    }
+}
+
+function deleteReservation(id) {
+    if (!confirm('هل أنت متأكد من حذف هذا الحجز؟')) return;
+    if (isFirebaseEnabled && db) {
+        db.ref('reservations/' + id).remove();
+    } else {
+        reservationsData = reservationsData.filter(r => r.id !== id);
         saveData();
         renderReservations();
         updateDashboardStats();
@@ -237,6 +281,7 @@ document.addEventListener('DOMContentLoaded', () => {
     updateDashboardStats();
     loadSettings();
     initStaffManagement();
+    initAdminChat();
 
     // Load settings from Firebase into form fields
     if (isFirebaseEnabled && db) {
@@ -405,7 +450,11 @@ function getAllSettings() {
         maintenanceMode: document.getElementById('setting-maintenance-mode').checked,
         eventMode: document.getElementById('setting-event-mode').checked,
         pointsPerOrder: document.getElementById('setting-points-per-order').value,
-        pointsThreshold: document.getElementById('setting-points-threshold').value
+        pointsThreshold: document.getElementById('setting-points-threshold').value,
+        heroTitle: document.getElementById('hero-title-input').value,
+        loyaltyCta: document.getElementById('loyalty-cta-input').value,
+        aboutTitle: document.getElementById('about-title-input').value,
+        googleMapsUrl: document.getElementById('google-maps-url-input').value
     };
 }
 
@@ -472,6 +521,11 @@ function loadSettingsFromObj(settings) {
     if (settings.eventMode !== undefined) document.getElementById('setting-event-mode').checked = settings.eventMode;
     if (settings.pointsPerOrder !== undefined) document.getElementById('setting-points-per-order').value = settings.pointsPerOrder;
     if (settings.pointsThreshold !== undefined) document.getElementById('setting-points-threshold').value = settings.pointsThreshold;
+
+    if (settings.heroTitle) document.getElementById('hero-title-input').value = settings.heroTitle;
+    if (settings.loyaltyCta) document.getElementById('loyalty-cta-input').value = settings.loyaltyCta;
+    if (settings.aboutTitle) document.getElementById('about-title-input').value = settings.aboutTitle;
+    if (settings.googleMapsUrl) document.getElementById('google-maps-url-input').value = settings.googleMapsUrl;
 }
 
 function toggleRestaurantStatus() {
@@ -643,6 +697,7 @@ function renderOrders(orders) {
                 <div style="font-size: 0.8rem; color: #64748b;">${order.customerPhone}</div>
             </td>
             <td style="padding: 1rem; font-size: 0.85rem;">${order.date}</td>
+            <td style="padding: 1rem; color: #0369a1; font-weight: 500;"><i class="fas fa-clock"></i> ${order.preparationTime || 'فوري'}</td>
             <td style="padding: 1rem; font-weight: bold;">${order.total} <span class="icon-saudi_riyal"></span></td>
             <td style="padding: 1rem;">
                 <span style="background: ${config.bg}; color: ${config.color}; padding: 4px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: bold;">
@@ -845,3 +900,252 @@ function updateStaffIconPreview() {
         preview.className = 'fas ' + iconInput;
     }
 }
+
+// ======================================================
+// ===       ADMIN CHAT MANAGEMENT - Firebase         ===
+// ======================================================
+
+let activeChatId = null;
+let activeChatListener = null;
+let adminChatsData = {};
+
+function initAdminChat() {
+    if (!isFirebaseEnabled || !db) return;
+
+    db.ref('chats').on('value', snapshot => {
+        const chats = snapshot.val();
+        adminChatsData = chats || {};
+        renderAdminChatList(adminChatsData);
+    });
+}
+
+function renderAdminChatList(chats) {
+    const listEl = document.getElementById('admin-chat-list');
+    if (!listEl) return;
+
+    const entries = Object.entries(chats);
+    if (entries.length === 0) {
+        listEl.innerHTML = `<div style="padding:2rem; text-align:center; color:var(--text-muted);">
+            <i class="fas fa-inbox" style="font-size:2rem; margin-bottom:1rem; display:block;"></i>
+            <p>لا توجد محادثات بعد.</p>
+        </div>`;
+        return;
+    }
+
+    // Sort by lastActivity descending
+    entries.sort((a, b) => {
+        const aTime = a[1].info?.lastActivity || 0;
+        const bTime = b[1].info?.lastActivity || 0;
+        return bTime - aTime;
+    });
+
+    let totalUnread = 0;
+    listEl.innerHTML = '';
+
+    entries.forEach(([chatId, chatData]) => {
+        const info = chatData.info || {};
+        const name = info.customerName || 'زائر';
+        const lastMsg = info.lastMessage || 'بدأ محادثة جديدة';
+        const isUnread = info.unreadByAdmin === true;
+        const timeStr = info.lastActivity
+            ? new Date(info.lastActivity).toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' })
+            : '';
+        const initial = name.charAt(0);
+
+        if (isUnread) totalUnread++;
+
+        const item = document.createElement('div');
+        item.className = 'chat-conv-item' + (chatId === activeChatId ? ' active' : '');
+        item.onclick = () => openAdminChat(chatId);
+        item.innerHTML = `
+            <div class="conv-avatar">${initial}</div>
+            <div class="conv-info">
+                <h4>${name}</h4>
+                <small>${lastMsg.substring(0, 35)}${lastMsg.length > 35 ? '...' : ''}</small>
+            </div>
+            <div style="text-align:left; flex-shrink:0;">
+                <small style="color:var(--text-muted); font-size:0.7rem;">${timeStr}</small>
+                ${isUnread ? '<div class="unread-badge" style="margin-top:4px;">●</div>' : ''}
+            </div>
+        `;
+        listEl.appendChild(item);
+    });
+
+    // Update sidebar badge
+    const sidebarBadge = document.getElementById('sidebar-chat-badge');
+    if (sidebarBadge) {
+        if (totalUnread > 0) {
+            sidebarBadge.innerText = totalUnread;
+            sidebarBadge.style.display = 'inline';
+        } else {
+            sidebarBadge.style.display = 'none';
+        }
+    }
+}
+
+function openAdminChat(chatId) {
+    activeChatId = chatId;
+
+    // Mark as read
+    if (isFirebaseEnabled && db) {
+        db.ref('chats/' + chatId + '/info/unreadByAdmin').set(false);
+    }
+
+    const info = adminChatsData[chatId]?.info || {};
+    const nameEl = document.getElementById('admin-chat-name');
+    const statusEl = document.getElementById('admin-chat-status');
+    const inputArea = document.getElementById('admin-chat-input-area');
+
+    if (nameEl) nameEl.innerText = info.customerName || 'زائر';
+    if (statusEl) statusEl.innerText = 'محادثة نشطة';
+    if (inputArea) inputArea.style.display = 'flex';
+
+    // Highlight active item
+    document.querySelectorAll('.chat-conv-item').forEach(el => el.classList.remove('active'));
+    // Re-render list to mark active
+    renderAdminChatList(adminChatsData);
+
+    // Remove old listener
+    if (activeChatListener) {
+        db.ref('chats/' + activeChatListener).off();
+    }
+    activeChatListener = chatId;
+
+    // Listen for messages in this chat
+    db.ref('chats/' + chatId + '/messages').orderByChild('timestamp').on('value', snapshot => {
+        const msgs = snapshot.val();
+        renderAdminChatMessages(msgs);
+    });
+
+    // Focus input
+    setTimeout(() => {
+        document.getElementById('admin-chat-input')?.focus();
+    }, 200);
+}
+
+function renderAdminChatMessages(msgsObj) {
+    const container = document.getElementById('admin-chat-messages');
+    if (!container) return;
+
+    if (!msgsObj) {
+        container.innerHTML = `<div style="text-align:center; color:var(--text-muted); padding:3rem;">
+            <p>لا توجد رسائل بعد في هذه المحادثة.</p>
+        </div>`;
+        return;
+    }
+
+    const msgs = Object.values(msgsObj);
+    msgs.sort((a, b) => a.timestamp - b.timestamp);
+
+    container.innerHTML = '';
+    msgs.forEach(msg => {
+        const time = new Date(msg.timestamp).toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' });
+        const isCustomer = msg.sender === 'customer';
+        const div = document.createElement('div');
+        div.className = `admin-msg ${isCustomer ? 'from-customer' : 'from-staff'}`;
+        div.innerHTML = `
+            <span>${msg.text}</span>
+            <span class="msg-time">${isCustomer ? (msg.senderName || 'العميل') : 'أنت (الإدارة)'} • ${time}</span>
+        `;
+        container.appendChild(div);
+    });
+
+    container.scrollTop = container.scrollHeight;
+}
+
+function sendAdminReply() {
+    if (!activeChatId) return;
+    const input = document.getElementById('admin-chat-input');
+    const text = input?.value.trim();
+    if (!text) return;
+
+    if (!isFirebaseEnabled || !db) return;
+
+    const msgData = {
+        text: text,
+        sender: 'staff',
+        senderName: 'الإدارة',
+        timestamp: Date.now()
+    };
+
+    db.ref('chats/' + activeChatId + '/messages').push(msgData);
+    db.ref('chats/' + activeChatId + '/info').update({
+        lastMessage: 'الإدارة: ' + text,
+        lastActivity: Date.now()
+    });
+
+    input.value = '';
+    input.focus();
+}
+
+// --- Reviews Management ---
+function initReviewsManagement() {
+    if (!isFirebaseEnabled || !db) return;
+
+    db.ref('reviews').on('value', (snapshot) => {
+        const data = snapshot.val();
+        const tbody = document.getElementById('reviews-tbody');
+        if (!tbody) return;
+
+        tbody.innerHTML = '';
+        if (!data) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 2rem; color: var(--text-muted);">لا توجد تقييمات حالياً.</td></tr>';
+            return;
+        }
+
+        Object.keys(data).forEach(key => {
+            const rev = data[key];
+            let starsHtml = '';
+            for (let i = 1; i <= 5; i++) {
+                starsHtml += `<i class="fas fa-star" style="color: ${i <= rev.rating ? 'var(--sandy-gold)' : '#cbd5e1'}; font-size: 0.8rem;"></i>`;
+            }
+
+            const tr = document.createElement('tr');
+            tr.style.borderBottom = '1px solid var(--glass-border)';
+            tr.innerHTML = `
+                <td style="padding: 1rem;">${rev.name}</td>
+                <td style="padding: 1rem;">${starsHtml} (${rev.rating})</td>
+                <td style="padding: 1rem; max-width: 300px; white-space: normal; line-height: 1.4;">${rev.text}</td>
+                <td style="padding: 1rem;">
+                    <span style="background: ${rev.status === 'approved' ? '#dcfce7' : '#fee2e2'}; color: ${rev.status === 'approved' ? '#166534' : '#991b1b'}; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem;">
+                        ${rev.status === 'approved' ? 'معتمد' : 'معلق'}
+                    </span>
+                </td>
+                <td style="padding: 1rem;">
+                    <div style="display: flex; gap: 8px;">
+                        ${rev.status === 'pending' 
+                            ? `<button onclick="updateReviewStatus('${key}', 'approved')" class="save-small-btn" style="background: #10b981;"><i class="fas fa-check"></i> اعتماد</button>` 
+                            : `<button onclick="updateReviewStatus('${key}', 'pending')" class="save-small-btn" style="background: #64748b;"><i class="fas fa-eye-slash"></i> إخفاء</button>`
+                        }
+                        <button onclick="deleteReview('${key}')" class="save-small-btn" style="background: #ef4444;"><i class="fas fa-trash-alt"></i></button>
+                    </div>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    });
+}
+
+function updateReviewStatus(key, status) {
+    if (isFirebaseEnabled && db) {
+        db.ref('reviews/' + key).update({ status }).then(() => {
+            console.log("Review status updated");
+        });
+    }
+}
+
+function deleteReview(key) {
+    if (!confirm('هل أنت متأكد من حذف هذا التقييم نهائياً؟')) return;
+    if (isFirebaseEnabled && db) {
+        db.ref('reviews/' + key).remove().then(() => {
+            console.log("Review deleted");
+        });
+    }
+}
+
+// Load theme on startup
+document.addEventListener('DOMContentLoaded', () => {
+    const savedTheme = localStorage.getItem('user-theme') || 'morning';
+    document.body.setAttribute('data-theme', savedTheme);
+    initReviewsManagement();
+});

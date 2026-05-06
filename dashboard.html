@@ -36,7 +36,7 @@
         .stat-card { background: var(--bg-card); color: var(--text-main); padding: 1.5rem; border-radius: 12px; display: flex; align-items: center; gap: 1rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid var(--glass-border); }
         .stat-icon { width: 48px; height: 48px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
         table { width: 100%; border-collapse: collapse; }
-        th { text-align: right; padding: 1rem; color: var(--text-muted); font-weight: 600; border-bottom: 2px solid #f1f5f9; }
+        th { text-align: right; padding: 1rem; color: var(--text-muted); font-weight: 600; border-bottom: 2px solid var(--glass-border); }
         .save-small-btn { 
             padding: 0.6rem 1.2rem; 
             background: var(--ocean-blue); 
@@ -89,6 +89,12 @@
         </div>
         <div class="sidebar-item" data-section="staff-management" onclick="showSection('staff-management')">
             <i class="fas fa-id-badge"></i> إدارة الموظفين
+        </div>
+        <div class="sidebar-item" data-section="reviews-admin" onclick="showSection('reviews-admin')">
+            <i class="fas fa-star"></i> تقييمات العملاء
+        </div>
+        <div class="sidebar-item" data-section="chat-admin" onclick="showSection('chat-admin')">
+            <i class="fas fa-comments"></i> المحادثات <span id="sidebar-chat-badge" style="background:var(--coral-orange); color:white; padding:1px 7px; border-radius:50%; font-size:0.75rem; margin-right:5px; display:none;">0</span>
         </div>
         
         <button class="logout-btn" onclick="logout()">
@@ -168,6 +174,7 @@
                             <th style="padding: 1rem; text-align: right;">رقم الطلب</th>
                             <th style="padding: 1rem; text-align: right;">العميل</th>
                             <th style="padding: 1rem; text-align: right;">التاريخ</th>
+                            <th style="padding: 1rem; text-align: right;">وقت التجهيز</th>
                             <th style="padding: 1rem; text-align: right;">الإجمالي</th>
                             <th style="padding: 1rem; text-align: right;">الحالة</th>
                             <th style="padding: 1rem; text-align: right;">الإجراءات</th>
@@ -445,6 +452,28 @@
                         </div>
                     </div>
 
+                    <!-- Dynamic Texts Management -->
+                    <div style="margin-bottom: 1.5rem; border-top: 1px solid #eee; padding-top: 1.5rem; margin-top: 1.5rem;">
+                        <h4 style="color: var(--ocean-blue); margin-bottom: 1rem;"><i class="fas fa-edit"></i> إدارة نصوص الموقع الرئيسية</h4>
+                        <div style="margin-bottom: 1rem;">
+                            <label style="display: block; margin-bottom: 0.4rem; font-weight: 600;">العنوان الرئيسي (Hero Title)</label>
+                            <input type="text" id="hero-title-input" placeholder="مذاق البحر الحقيقي" style="width: 100%; padding: 0.8rem; border-radius: 8px; border: 1px solid #e2e8f0; font-family: inherit;">
+                        </div>
+                        <div style="margin-bottom: 1rem;">
+                            <label style="display: block; margin-bottom: 0.4rem; font-weight: 600;">نص الولاء (Loyalty CTA)</label>
+                            <input type="text" id="loyalty-cta-input" placeholder="سجل الآن وابدأ بجمع اللآلئ!" style="width: 100%; padding: 0.8rem; border-radius: 8px; border: 1px solid #e2e8f0; font-family: inherit;">
+                        </div>
+                        <div style="margin-bottom: 1rem;">
+                            <label style="display: block; margin-bottom: 0.4rem; font-weight: 600;">عنوان "عن المطعم"</label>
+                            <input type="text" id="about-title-input" placeholder="عن أمواج الصياد" style="width: 100%; padding: 0.8rem; border-radius: 8px; border: 1px solid #e2e8f0; font-family: inherit;">
+                        </div>
+                        <div style="margin-bottom: 1rem;">
+                            <label style="display: block; margin-bottom: 0.4rem; font-weight: 600;">رابط خريطة جوجل (Embed URL)</label>
+                            <input type="text" id="google-maps-url-input" placeholder="انسخ رابط iframe من جوجل ماب..." style="width: 100%; padding: 0.8rem; border-radius: 8px; border: 1px solid #e2e8f0; font-family: inherit;">
+                            <small style="color: var(--text-muted); font-size: 0.8rem;">يمكنك الحصول على الرابط من جوجل ماب > مشاركة > تضمين خريطة > نسخ src</small>
+                        </div>
+                    </div>
+
                     <!-- New: Broadcast Notification -->
                     <div style="margin-bottom: 1.5rem; border-top: 1px solid #eee; padding-top: 1.5rem; margin-top: 1.5rem;">
                         <h4 style="color: var(--ocean-blue); margin-bottom: 1rem;"><i class="fas fa-broadcast-tower"></i> إرسال تنبيه عاجل للزوار</h4>
@@ -461,6 +490,42 @@
                     </div>
 
                     <button class="btn-primary" onclick="saveSettings()" style="margin-top: 2rem; width: 100%;">حفظ كافة الإعدادات (مزامنة كاملة)</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Chat Management Section -->
+        <section id="chat-admin" style="display: none;">
+            <h1 style="margin-bottom: 1.5rem;"><i class="fas fa-comments"></i> المحادثات المباشرة مع العملاء</h1>
+            <div class="chat-inbox">
+                <!-- Conversations List -->
+                <div class="chat-conversations-list" id="admin-chat-list">
+                    <div style="padding:2rem; text-align:center; color:var(--text-muted);">
+                        <i class="fas fa-inbox" style="font-size:2rem; margin-bottom:1rem; display:block;"></i>
+                        <p>لا توجد محادثات بعد.</p>
+                    </div>
+                </div>
+                <!-- Chat View -->
+                <div class="chat-view" id="admin-chat-view">
+                    <div class="chat-view-header" id="admin-chat-header">
+                        <div style="width:42px;height:42px;border-radius:50%;background:var(--ocean-blue);color:white;display:flex;align-items:center;justify-content:center;">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div>
+                            <h4 style="margin:0;" id="admin-chat-name">اختر محادثة</h4>
+                            <small style="color:var(--text-muted);" id="admin-chat-status">اختر عميلاً من القائمة للبدء</small>
+                        </div>
+                    </div>
+                    <div class="chat-view-messages" id="admin-chat-messages">
+                        <div style="text-align:center; color:var(--text-muted); padding:3rem;">
+                            <i class="fas fa-comment-dots" style="font-size:3rem; margin-bottom:1rem; display:block; opacity:0.3;"></i>
+                            <p>اختر محادثة من القائمة لعرض الرسائل</p>
+                        </div>
+                    </div>
+                    <div class="chat-view-input" id="admin-chat-input-area" style="display:none;">
+                        <input type="text" id="admin-chat-input" placeholder="اكتب ردك هنا..." onkeypress="if(event.key==='Enter') sendAdminReply()">
+                        <button onclick="sendAdminReply()"><i class="fas fa-paper-plane"></i> إرسال</button>
+                    </div>
                 </div>
             </div>
         </section>
@@ -484,6 +549,28 @@
                         </tr>
                     </thead>
                     <tbody id="staff-tbody">
+                        <tr><td colspan="5" style="text-align: center; padding: 2rem; color: var(--text-muted);"><i class="fas fa-spinner fa-spin"></i> جاري التحميل...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Reviews Management Section -->
+        <section id="reviews-admin" style="display: none;">
+            <h1 style="margin-bottom: 1.5rem;"><i class="fas fa-star"></i> إدارة تقييمات العملاء</h1>
+            <p style="color: var(--text-muted); margin-bottom: 1.5rem; font-size: 0.9rem;"><i class="fas fa-info-circle"></i> يمكنك الموافقة على التقييمات ليتم عرضها في الموقع الرئيسي، أو إخفاؤها.</p>
+            <div class="card" style="padding: 0; overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="background: #f8fafc; border-bottom: 2px solid #e2e8f0;">
+                            <th style="padding: 1rem; text-align: right;">العميل</th>
+                            <th style="padding: 1rem; text-align: right;">التقييم</th>
+                            <th style="padding: 1rem; text-align: right;">التعليق</th>
+                            <th style="padding: 1rem; text-align: right;">الحالة</th>
+                            <th style="padding: 1rem; text-align: right;">الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="reviews-tbody">
                         <tr><td colspan="5" style="text-align: center; padding: 2rem; color: var(--text-muted);"><i class="fas fa-spinner fa-spin"></i> جاري التحميل...</td></tr>
                     </tbody>
                 </table>

@@ -59,7 +59,7 @@
 
     <!-- Hero Section -->
     <section class="hero">
-        <h1>مذاق البحر الحقيقي</h1>
+        <h1 id="hero-title">مذاق البحر الحقيقي</h1>
         <p>استمتع بأشهى المأكولات البحرية الطازجة المحضرة بكل حب وإتقان في أجواء بحرية ساحرة.</p>
         <a href="#menu" class="btn-primary">اطلب الآن</a>
     </section>
@@ -69,7 +69,7 @@
         <div style="max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: center; gap: 15px; flex-wrap: wrap;">
             <div style="font-size: 2.5rem; animation: pulse 2s infinite;"><i class="fas fa-gift"></i></div>
             <div style="text-align: right;">
-                <h3 style="margin: 0; font-size: 1.4rem;">سجل الآن وابدأ بجمع اللآلئ! ⭐</h3>
+                <h3 id="loyalty-cta" style="margin: 0; font-size: 1.4rem;">سجل الآن وابدأ بجمع اللآلئ! ⭐</h3>
                 <p style="margin: 0; font-size: 1rem; opacity: 0.9;">كل طلب يمنحك نقطة.. اجمع 100 نقطة واحصل على <strong>وجبة مجانية فاخرة</strong> من اختيارك!</p>
             </div>
             <button onclick="openProfileModal()" style="background: var(--deep-blue); color: white; border: none; padding: 10px 25px; border-radius: 50px; font-weight: bold; cursor: pointer; transition: 0.3s; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">انضم إلينا الآن</button>
@@ -96,7 +96,7 @@
     <section id="about">
         <div class="grid" style="align-items: center;">
             <div>
-                <h2 class="section-title" style="text-align: right;">عن أمواج الصياد</h2>
+                <h2 id="about-title" class="section-title" style="text-align: right;">عن أمواج الصياد</h2>
                 <p>نحن فخورون بتقديم أفضل أنواع الأسماك والقشريات الطازجة يومياً من البحر مباشرة إلى طاولتكم. نجمع بين الأصالة في الطعم والحداثة في التقديم لنخلق لكم تجربة لا تُنسى.</p>
                 <div style="margin-top: 2rem;">
                     <span style="display: block; margin-bottom: 0.5rem;"><i class="fas fa-check-circle" style="color: var(--sandy-gold);"></i> أسماك طازجة يومياً</span>
@@ -168,7 +168,7 @@
     </section>
 
     <!-- Testimonials Section -->
-    <section id="testimonials" style="background: #f1f5f9;">
+    <section id="testimonials" style="background: var(--bg-main);">
         <h2 class="section-title">قالوا عنا</h2>
         <div id="testimonials-grid" class="grid">
             <!-- Dynamic Testimonials -->
@@ -178,21 +178,34 @@
     <!-- Reviews -->
     <section id="reviews">
         <h2 class="section-title">آراء عملائنا</h2>
-        <div class="grid">
-            <div class="card card-content">
-                <div style="color: var(--sandy-gold); margin-bottom: 1rem;">
-                    <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
-                </div>
-                <p>"أفضل مطعم سمك جربته في المنطقة، الطعم خيالي والخدمة سريعة جداً. أنصح بطاجن الجمبري."</p>
-                <h4 style="margin-top: 1rem;">- أحمد خالد</h4>
+        <div class="grid" id="reviews-dynamic-grid">
+            <!-- Loading placeholder -->
+            <div style="text-align: center; grid-column: 1/-1; padding: 2rem; color: var(--text-muted);">
+                <i class="fas fa-spinner fa-spin fa-2x"></i>
+                <p style="margin-top: 1rem;">جاري تحميل آراء المبدعين...</p>
             </div>
-            <div class="card card-content">
-                <div style="color: var(--sandy-gold); margin-bottom: 1rem;">
-                    <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
+        </div>
+    </section>
+
+    <!-- Review Submission -->
+    <section id="add-review" style="background: var(--bg-card); padding: 4rem 2rem;">
+        <div style="max-width: 600px; margin: 0 auto; text-align: center;">
+            <h2 class="section-title">أضف تقييمك</h2>
+            <p style="color: var(--text-muted); margin-bottom: 2rem;">رأيك يهمنا ويساعدنا على التحسن المستمر</p>
+            
+            <form id="review-form" style="display: flex; flex-direction: column; gap: 15px;">
+                <div style="display: flex; justify-content: center; gap: 10px; font-size: 2rem; color: #cbd5e1; margin-bottom: 1rem;" id="star-rating">
+                    <i class="fas fa-star rating-star" data-rating="1" style="cursor: pointer;"></i>
+                    <i class="fas fa-star rating-star" data-rating="2" style="cursor: pointer;"></i>
+                    <i class="fas fa-star rating-star" data-rating="3" style="cursor: pointer;"></i>
+                    <i class="fas fa-star rating-star" data-rating="4" style="cursor: pointer;"></i>
+                    <i class="fas fa-star rating-star" data-rating="5" style="cursor: pointer;"></i>
                 </div>
-                <p>"الديكور جميل جداً ويشعرك بالراحة، الأكل طازج والأسعار مناسبة جداً للجودة."</p>
-                <h4 style="margin-top: 1rem;">- سارة محمد</h4>
-            </div>
+                <input type="hidden" id="selected-rating" value="0">
+                <input type="text" id="review-name" placeholder="اسمك الكريم" required style="padding: 1rem; border-radius: 12px; border: 1px solid var(--glass-border); background: var(--bg-main); color: var(--text-main); font-family: inherit;">
+                <textarea id="review-text" placeholder="اكتب تجربتك هنا..." rows="4" required style="padding: 1rem; border-radius: 12px; border: 1px solid var(--glass-border); background: var(--bg-main); color: var(--text-main); font-family: inherit; resize: none;"></textarea>
+                <button type="submit" class="btn-primary" style="width: 100%; padding: 1.2rem;">إرسال التقييم</button>
+            </form>
         </div>
     </section>
 
@@ -211,9 +224,15 @@
     </section>
 
     <!-- Maps & Contact -->
-    <section id="contact" style="padding: 0;">
-        <div style="width: 100%; height: 400px;">
-            <iframe src="https://maps.google.com/maps?q=%D8%A3%D9%85%D9%88%D8%A7%D8%AC+%D8%A7%D9%84%D8%B5%D9%8A%D8%A7%D8%AF+%D9%84%D9%84%D9%85%D8%A3%D9%83%D9%88%D9%84%D8%A7%D8%AA+%D8%A7%D9%84%D8%A8%D8%AD%D8%B1%D9%8A%D8%A9%D8%8C+6452%D8%8C+2743%D8%8C+%D8%A8%D8%AD%D8%B1%D9%87+22847&t=&z=15&ie=UTF8&iwloc=&output=embed" width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
+    <section id="contact" style="padding: 0; position: relative;">
+        <div style="width: 100%; height: 450px;">
+            <iframe id="google-map-iframe" src="https://maps.google.com/maps?q=%D8%A3%D9%85%D9%88%D8%A7%D8%AC+%D8%A7%D9%84%D8%B5%D9%8A%D8%A7%D8%AF+%D9%84%D9%84%D9%85%D8%A3%D9%83%D9%88%D9%84%D8%A7%D8%AA+%D8%A7%D9%84%D8%A8%D8%AD%D8%B1%D9%8A%D8%A9%D8%8C+6452%D8%8C+2743%D8%8C+%D8%A8%D8%AD%D8%B1%D9%87+22847&t=&z=15&ie=UTF8&iwloc=&output=embed" width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
+        </div>
+        <div style="position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 10;">
+            <a href="https://maps.app.goo.gl/YourActualGoogleMapsLink" id="get-directions-btn" target="_blank" class="btn-primary" style="display: flex; align-items: center; gap: 10px; background: rgba(2, 6, 23, 0.8); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); box-shadow: 0 10px 30px rgba(0,0,0,0.3); padding: 12px 30px; border-radius: 50px;">
+                <i class="fas fa-directions" style="font-size: 1.2rem; color: var(--sandy-gold);"></i>
+                <span>احصل على الاتجاهات</span>
+            </a>
         </div>
     </section>
 
@@ -272,6 +291,13 @@
                         استبدال 100 نقطة بوجبة مجانية (تُخصم من أعلى صنف سعراً)!
                     </label>
                 </div>
+            </div>
+
+            <!-- Preparation Time Section -->
+            <div style="margin-bottom: 1rem;">
+                <label style="font-size: 0.9rem; display: block; margin-bottom: 5px;"><i class="fas fa-clock" style="color: var(--ocean-blue);"></i> وقت التجهيز المفضل:</label>
+                <input type="time" id="preparation-time" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px; font-family: inherit;">
+                <small style="color: var(--text-muted); font-size: 0.75rem;">اتركه فارغاً للتحضير الفوري</small>
             </div>
 
             <div style="margin-bottom: 1rem;">
@@ -349,7 +375,7 @@
                 </div>
                 <h3 id="profile-name" style="color: var(--primary-blue); margin-bottom: 0.5rem;"></h3>
                 <p id="profile-phone" style="color: var(--text-muted); margin-bottom: 1.5rem; font-size: 0.9rem;"></p>
-                <div style="background: #fffbeb; border: 1px solid #fde68a; padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem;">
+                <div style="background: var(--bg-card); border: 1px solid var(--sandy-gold); padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem;">
                     <h4 style="color: #b45309; margin-bottom: 0.5rem;">رصيد النقاط</h4>
                     <div style="font-size: 2.5rem; font-weight: bold; color: var(--sandy-gold);">
                         <i class="fas fa-star" style="font-size: 2rem;"></i> <span id="profile-points">0</span>
@@ -500,9 +526,27 @@
         <button onclick="setTheme('night')" title="الوضع الليلي" style="width: 45px; height: 45px; border-radius: 50%; border: 2px solid white; background: #020617; color: #38bdf8; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.2);"><i class="fas fa-moon"></i></button>
     </div>
     <!-- Floating Support Button -->
-    <div class="support-float" onclick="openSupportModal()">
+    <div class="support-float" onclick="toggleChatWidget()">
         <i class="fas fa-comments"></i>
-        <span class="badge">1</span>
+        <span class="badge" id="chat-unread-badge" style="display:none;">0</span>
+    </div>
+
+    <!-- Customer Chat Widget -->
+    <div class="chat-widget" id="chat-widget">
+        <div class="chat-widget-header">
+            <h4><span class="online-dot"></span> محادثة مباشرة</h4>
+            <button onclick="toggleChatWidget()" style="background:none; border:none; color:white; font-size:1.2rem; cursor:pointer;">&times;</button>
+        </div>
+        <div class="chat-messages" id="chat-messages">
+            <div class="chat-msg staff">
+                <span>مرحباً بك في أمواج الصياد! 🐟 كيف يمكننا مساعدتك؟</span>
+                <span class="msg-time">فريق الدعم</span>
+            </div>
+        </div>
+        <div class="chat-input-area">
+            <input type="text" id="chat-input" placeholder="اكتب رسالتك..." onkeypress="if(event.key==='Enter') sendChatMessage()">
+            <button onclick="sendChatMessage()"><i class="fas fa-paper-plane"></i></button>
+        </div>
     </div>
 
     <!-- Support Modal -->
