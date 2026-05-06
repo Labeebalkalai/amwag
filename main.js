@@ -931,9 +931,19 @@ function checkout() {
                     const pointsToAdd = globalSettings && globalSettings.pointsPerOrder ? parseInt(globalSettings.pointsPerOrder) : 1;
                     const threshold = globalSettings && globalSettings.pointsThreshold ? parseInt(globalSettings.pointsThreshold) : 10;
                     
-                    if (isRedeeming && customerData.points >= threshold) customerData.points -= threshold;
+                    if (isRedeeming && customerData.points >= threshold) {
+                        customerData.points -= threshold;
+                    }
                     customerData.points += pointsToAdd; 
-                    customerRef.set(customerData);
+                    
+                    customerRef.set(customerData).then(() => {
+                        // Update local session to reflect new points immediately
+                        if (loggedInCustomer && loggedInCustomer.phone === targetPhone) {
+                            loggedInCustomer = customerData;
+                            localStorage.setItem('loggedInCustomer', JSON.stringify(loggedInCustomer));
+                            updateAuthUI();
+                        }
+                    });
 
                     // Save Order Invoice and Tracking
                     const orderData = {

@@ -717,13 +717,18 @@ function renderOrders(orders) {
                 </span>
             </td>
             <td style="padding: 1rem;">
-                <select onchange="updateOrderStatus('${order.orderId}', '${order.customerPhone}', this.value)" style="padding: 5px; border-radius: 5px; border: 1px solid #ddd; font-size: 0.8rem;">
-                    <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>إنتظار</option>
-                    <option value="preparing" ${order.status === 'preparing' ? 'selected' : ''}>تحضير</option>
-                    <option value="ready" ${order.status === 'ready' ? 'selected' : ''}>جاهز</option>
-                    <option value="delivered" ${order.status === 'delivered' ? 'selected' : ''}>تسليم</option>
-                    <option value="cancelled" ${order.status === 'cancelled' ? 'selected' : ''}>إلغاء</option>
-                </select>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <select onchange="updateOrderStatus('${order.orderId}', '${order.customerPhone}', this.value)" style="padding: 5px; border-radius: 5px; border: 1px solid #ddd; font-size: 0.8rem;">
+                        <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>إنتظار</option>
+                        <option value="preparing" ${order.status === 'preparing' ? 'selected' : ''}>تحضير</option>
+                        <option value="ready" ${order.status === 'ready' ? 'selected' : ''}>جاهز</option>
+                        <option value="delivered" ${order.status === 'delivered' ? 'selected' : ''}>تسليم</option>
+                        <option value="cancelled" ${order.status === 'cancelled' ? 'selected' : ''}>إلغاء</option>
+                    </select>
+                    <button onclick="deleteOrder('${order.orderId}', '${order.customerPhone}')" style="color: #ef4444; border: none; background: none; cursor: pointer; font-size: 1.1rem;" title="حذف الطلب">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </div>
             </td>
         `;
         tbody.appendChild(tr);
@@ -742,6 +747,20 @@ function updateOrderStatus(orderId, phone, newStatus) {
     db.ref().update(updates).then(() => {
         console.log("Order status updated successfully");
     }).catch(err => alert("Error updating order: " + err.message));
+}
+
+function deleteOrder(orderId, phone) {
+    if (!confirm(`هل أنت متأكد من حذف الطلب رقم ${orderId} نهائياً؟`)) return;
+    
+    if (!isFirebaseEnabled || !db) return;
+
+    const updates = {};
+    updates['/orders/' + orderId] = null;
+    updates['/customers/' + phone + '/orders/' + orderId] = null;
+
+    db.ref().update(updates).then(() => {
+        console.log("Order deleted successfully");
+    }).catch(err => alert("Error deleting order: " + err.message));
 }
 
 // ======================================================
