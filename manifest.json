@@ -1,0 +1,21 @@
+{
+  "name": "مطعم أمواج الصياد",
+  "short_name": "أمواج الصياد",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#001f3f",
+  "theme_color": "#002d5a",
+  "description": "تجربة سي فود استثنائية في أمواج الصياد",
+  "icons": [
+    {
+      "src": "logo.png.jpeg",
+      "sizes": "192x192",
+      "type": "image/jpeg"
+    },
+    {
+      "src": "logo.png.jpeg",
+      "sizes": "512x512",
+      "type": "image/jpeg"
+    }
+  ]
+}

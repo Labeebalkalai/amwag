@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>أمواج الصياد | تجربة سي فود استثنائية</title>
+    <meta name="description" content="مطعم أمواج الصياد يقدم أفضل المأكولات البحرية الطازجة، مشويات، طواجن، وحجز جلسات أونلاين.">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@emran-alhaddad/saudi-riyal-font@latest/index.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="manifest" href="manifest.json">
+</head>
+<body>
+    <div id="scroll-progress"></div>
+    <div id="custom-cursor"></div>
+    <!-- Header -->
+    <header>
+        <a href="index.html" class="logo">
+            <img src="logo.png.jpeg" alt="أمواج الصياد" style="height: 50px; vertical-align: middle; margin-left: 10px; border-radius: 5px;">
+            أمواج الصياد
+        </a>
+        <nav>
+            <ul>
+                <li><a href="index.html">الرئيسية</a></li>
+                <li><a href="#menu">المنيو الرقمي</a></li>
+                <li><a href="#reservations">حجز جلسة</a></li>
+                <li><a href="#about">عن المطعم</a></li>
+                <li><a href="#contact">اتصل بنا</a></li>
+                <li><a href="#" onclick="openDeveloperModal()" style="color: var(--sandy-gold);"><i class="fas fa-code"></i> مطور الموقع</a></li>
+                <li><a href="#" id="auth-nav-btn" onclick="openProfileModal()" style="color: var(--sandy-gold); font-weight: bold;"><i class="fas fa-user-circle"></i> حسابي</a></li>
+                <li><a href="dashboard.html" style="color: var(--sandy-gold); font-weight: bold;"><i class="fas fa-lock"></i> الإدارة</a></li>
+            </ul>
+        </nav>
+        <div class="cart-btn" onclick="toggleCart()" style="color: white; cursor: pointer; font-size: 1.2rem; position: relative;">
+            <i class="fas fa-shopping-cart"></i>
+            <span id="cart-count" style="background: var(--coral-orange); color: white; border-radius: 50%; padding: 2px 6px; font-size: 0.8rem; position: absolute; top: -10px; right: -10px;">0</span>
+        </div>
+        <!-- Hamburger -->
+        <button class="hamburger" id="hamburger-btn" onclick="toggleMobileNav()" aria-label="القائمة">
+            <span></span><span></span><span></span>
+        </button>
+    </header>
+
+    <!-- Mobile Navigation -->
+    <div class="nav-overlay" id="nav-overlay" onclick="closeMobileNav()"></div>
+    <nav class="mobile-nav" id="mobile-nav">
+        <ul>
+            <li><a href="index.html" onclick="closeMobileNav()"><i class="fas fa-home"></i> الرئيسية</a></li>
+            <li><a href="#menu" onclick="closeMobileNav()"><i class="fas fa-utensils"></i> المنيو الرقمي</a></li>
+            <li><a href="#reservations" onclick="closeMobileNav()"><i class="fas fa-calendar-alt"></i> حجز جلسة</a></li>
+            <li><a href="#about" onclick="closeMobileNav()"><i class="fas fa-info-circle"></i> عن المطعم</a></li>
+            <li><a href="#contact" onclick="closeMobileNav()"><i class="fas fa-map-marker-alt"></i> اتصل بنا</a></li>
+            <li><a href="#" onclick="openDeveloperModal(); closeMobileNav();" style="color: var(--sandy-gold);"><i class="fas fa-code"></i> مطور الموقع</a></li>
+            <li><a href="#" id="auth-mobile-btn" onclick="openProfileModal(); closeMobileNav();" style="color: var(--sandy-gold); font-weight: bold;"><i class="fas fa-user-circle"></i> حسابي</a></li>
+            <li><a href="dashboard.html" onclick="closeMobileNav()" style="color: var(--sandy-gold); font-weight: bold;"><i class="fas fa-lock"></i> الإدارة</a></li>
+        </ul>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <h1>مذاق البحر الحقيقي</h1>
+        <p>استمتع بأشهى المأكولات البحرية الطازجة المحضرة بكل حب وإتقان في أجواء بحرية ساحرة.</p>
+        <a href="#menu" class="btn-primary">اطلب الآن</a>
+    </section>
+
+    <!-- Loyalty Exciting Banner -->
+    <div style="background: linear-gradient(135deg, var(--sandy-gold), #b8860b); color: var(--deep-blue); padding: 1.5rem; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+        <div style="max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: center; gap: 15px; flex-wrap: wrap;">
+            <div style="font-size: 2.5rem; animation: pulse 2s infinite;"><i class="fas fa-gift"></i></div>
+            <div style="text-align: right;">
+                <h3 style="margin: 0; font-size: 1.4rem;">سجل الآن وابدأ بجمع اللآلئ! ⭐</h3>
+                <p style="margin: 0; font-size: 1rem; opacity: 0.9;">كل طلب يمنحك نقطة.. اجمع 100 نقطة واحصل على <strong>وجبة مجانية فاخرة</strong> من اختيارك!</p>
+            </div>
+            <button onclick="openProfileModal()" style="background: var(--deep-blue); color: white; border: none; padding: 10px 25px; border-radius: 50px; font-weight: bold; cursor: pointer; transition: 0.3s; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">انضم إلينا الآن</button>
+        </div>
+    </div>
+    <style>
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+    </style>
+
+    <!-- Promo Banner -->
+    <div id="promo-banner" style="background: var(--ocean-blue); color: white; text-align: center; font-weight: bold; overflow: hidden; transition: 0.3s;">
+        <div id="promo-image-container" style="display: none; width: 100%; height: auto;">
+            <img id="promo-image-el" src="" alt="عرض خاص" style="width: 100%; max-height: 250px; object-fit: cover;">
+        </div>
+        <div id="promo-video-container" style="display: none; width: 100%; height: auto;">
+            <video id="promo-video-el" controls muted autoplay loop style="width: 100%; max-height: 400px; object-fit: cover;"></video>
+        </div>
+        <div id="promo-text-container" style="padding: 1rem;">
+            <marquee id="promo-marquee">🔥 عرض الغداء: خصم 20% على جميع الطواجن يومياً من 12 إلى 4 عصراً! 🔥</marquee>
+        </div>
+    </div>
+
+    <!-- About Section -->
+    <section id="about">
+        <div class="grid" style="align-items: center;">
+            <div>
+                <h2 class="section-title" style="text-align: right;">عن أمواج الصياد</h2>
+                <p>نحن فخورون بتقديم أفضل أنواع الأسماك والقشريات الطازجة يومياً من البحر مباشرة إلى طاولتكم. نجمع بين الأصالة في الطعم والحداثة في التقديم لنخلق لكم تجربة لا تُنسى.</p>
+                <div style="margin-top: 2rem;">
+                    <span style="display: block; margin-bottom: 0.5rem;"><i class="fas fa-check-circle" style="color: var(--sandy-gold);"></i> أسماك طازجة يومياً</span>
+                    <span style="display: block; margin-bottom: 0.5rem;"><i class="fas fa-check-circle" style="color: var(--sandy-gold);"></i> طهاة محترفون</span>
+                    <span style="display: block; margin-bottom: 0.5rem;"><i class="fas fa-check-circle" style="color: var(--sandy-gold);"></i> إطلالة بحرية خلابة</span>
+                    <div id="opening-hours-display" style="margin-top: 1.5rem; padding: 1rem; background: var(--bg-main); border-radius: 12px; border: 1px solid var(--glass-border); color: var(--text-main);">
+                        <h4 style="margin-bottom: 0.5rem; color: var(--ocean-blue);"><i class="fas fa-clock"></i> أوقات العمل</h4>
+                        <p id="hours-text">يومياً من <span id="display-open-time">09:00 ص</span> حتى <span id="display-close-time">11:00 م</span></p>
+                        <p id="current-status-badge" style="margin-top: 0.5rem; font-weight: bold;"></p>
+                    </div>
+                </div>
+            </div>
+            <div class="about-slider" style="border-radius: 20px; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.2); position: relative; height: clamp(220px, 40vw, 400px);">
+                <div class="slider-track" style="display: flex; width: 300%; height: 100%; animation: slideAbout 12s infinite linear;">
+                    <img src="amwwaj.jpeg" style="width: 33.33%; object-fit: cover;">
+                    <img src="aa.jpeg" style="width: 33.33%; object-fit: cover;">
+                    <img src="amm.jpeg" style="width: 33.33%; object-fit: cover;">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Reservations -->
+    <section id="reservations" style="background: var(--deep-blue); color: white;">
+        <h2 class="section-title" style="color: var(--sandy-gold);">حجز جلسة</h2>
+        <form id="reservation-form" style="max-width: 600px; margin: 0 auto; display: grid; gap: 1.5rem;">
+            <div class="res-row">
+                <input type="text" id="res-name" placeholder="الاسم الكامل" required style="padding: 1rem; border-radius: 8px; border: none; width: 100%;">
+                <input type="tel" id="res-phone" placeholder="رقم الجوال" required style="padding: 1rem; border-radius: 8px; border: none; width: 100%;">
+            </div>
+            <div class="res-row">
+                <input type="date" id="res-date" required style="padding: 1rem; border-radius: 8px; border: none; width: 100%;">
+                <input type="time" id="res-time" required style="padding: 1rem; border-radius: 8px; border: none; width: 100%;">
+            </div>
+            <select id="res-persons" required style="padding: 1rem; border-radius: 8px; border: none;">
+                <option value="">عدد الأفراد</option>
+                <option value="1">شخص واحد</option>
+                <option value="2">شخصين</option>
+                <option value="4">4 أشخاص</option>
+                <option value="6">عائلة (6+)</option>
+            </select>
+            <button type="submit" class="btn-primary" style="width: 100%;">تأكيد الحجز</button>
+        </form>
+    </section>
+
+    <!-- Menu Section -->
+    <section id="menu">
+        <h2 class="section-title">قائمة الطعام</h2>
+        
+        <!-- Search & Filter Bar -->
+        <div style="max-width: 800px; margin: 0 auto 2rem; display: flex; flex-direction: column; gap: 1rem;">
+            <div style="position: relative; flex: 1;">
+                <i class="fas fa-search" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: var(--text-muted);"></i>
+                <input type="text" id="menu-search" oninput="searchMenu()" placeholder="ابحث عن طبقك المفضل (مثلاً: جمبري، طاجن...)" style="width: 100%; padding: 1rem 4rem 1rem 1rem; border-radius: 50px; border: 2px solid #e2e8f0; font-size: 1rem; outline: none; transition: border-color 0.3s;">
+                <button onclick="startVoiceSearch()" title="البحث الصوتي" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--ocean-blue); cursor: pointer; font-size: 1.2rem;"><i class="fas fa-microphone"></i></button>
+            </div>
+            <div class="menu-filters" style="display: flex; justify-content: center; gap: 10px; flex-wrap: wrap;">
+                <button class="filter-btn active" onclick="filterMenu('all')">الكل</button>
+                <button class="filter-btn" onclick="filterMenu('appetizer')">مقبلات</button>
+                <button class="filter-btn" onclick="filterMenu('grilled')">قسم السمك</button>
+                <button class="filter-btn" onclick="filterMenu('stew')">طواجن</button>
+                <button class="filter-btn" onclick="filterMenu('soup')">شوربات</button>
+                <button class="filter-btn" onclick="filterMenu('traditional')">ماكولات شعبيه</button>
+                <button class="filter-btn" onclick="filterMenu('drink')">مشروبات</button>
+            </div>
+        </div>
+
+        <div id="menu-grid" class="grid"></div>
+    </section>
+
+    <!-- Testimonials Section -->
+    <section id="testimonials" style="background: #f1f5f9;">
+        <h2 class="section-title">قالوا عنا</h2>
+        <div id="testimonials-grid" class="grid">
+            <!-- Dynamic Testimonials -->
+        </div>
+    </section>
+
+    <!-- Reviews -->
+    <section id="reviews">
+        <h2 class="section-title">آراء عملائنا</h2>
+        <div class="grid">
+            <div class="card card-content">
+                <div style="color: var(--sandy-gold); margin-bottom: 1rem;">
+                    <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
+                </div>
+                <p>"أفضل مطعم سمك جربته في المنطقة، الطعم خيالي والخدمة سريعة جداً. أنصح بطاجن الجمبري."</p>
+                <h4 style="margin-top: 1rem;">- أحمد خالد</h4>
+            </div>
+            <div class="card card-content">
+                <div style="color: var(--sandy-gold); margin-bottom: 1rem;">
+                    <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
+                </div>
+                <p>"الديكور جميل جداً ويشعرك بالراحة، الأكل طازج والأسعار مناسبة جداً للجودة."</p>
+                <h4 style="margin-top: 1rem;">- سارة محمد</h4>
+            </div>
+        </div>
+    </section>
+
+    <!-- Meet our Team -->
+    <section id="staff">
+        <h2 class="section-title">فريقنا المتميز</h2>
+        <!-- Populated dynamically from Firebase via main.js > renderStaffSection() -->
+        <div class="staff-grid" id="staff-grid-dynamic">
+            <!-- Loading skeleton -->
+            <div class="staff-card" style="opacity:0.5;">
+                <div class="staff-img-wrapper"><i class="fas fa-spinner fa-spin"></i></div>
+                <h3>جاري التحميل...</h3>
+                <p>يرجى الانتظار</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Maps & Contact -->
+    <section id="contact" style="padding: 0;">
+        <div style="width: 100%; height: 400px;">
+            <iframe src="https://maps.google.com/maps?q=%D8%A3%D9%85%D9%88%D8%A7%D8%AC+%D8%A7%D9%84%D8%B5%D9%8A%D8%A7%D8%AF+%D9%84%D9%84%D9%85%D8%A3%D9%83%D9%88%D9%84%D8%A7%D8%AA+%D8%A7%D9%84%D8%A8%D8%AD%D8%B1%D9%8A%D8%A9%D8%8C+6452%D8%8C+2743%D8%8C+%D8%A8%D8%AD%D8%B1%D9%87+22847&t=&z=15&ie=UTF8&iwloc=&output=embed" width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
+        </div>
+    </section>
+
+    <!-- Shopping Cart Sidebar -->
+    <div id="cart-sidebar" class="compact-cart" style="display: flex; flex-direction: column; position: fixed; top: 0; left: -400px; width: 320px; max-width: 100vw; height: 100%; background: var(--wave-white); z-index: 2000; box-shadow: 2px 0 20px rgba(0,0,0,0.2); transition: 0.3s; color: var(--text-main);">
+        <div style="padding: 1.5rem 1.5rem 0.5rem 1.5rem; flex-shrink: 0; border-bottom: 1px solid #eee;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <h3 style="margin: 0; color: var(--ocean-blue);">سلة الطلبات</h3>
+                <i class="fas fa-times" onclick="toggleCart()" style="cursor: pointer; font-size: 1.2rem; color: var(--text-muted);"></i>
+            </div>
+        </div>
+        <div class="cart-scroll-area" style="flex-grow: 1; overflow-y: auto; padding: 1rem 1.5rem;">
+            <div id="cart-items" style="margin-bottom: 1.5rem;"></div>
+            
+            <!-- Coupon Code Section -->
+            <div style="margin-bottom: 1.5rem; padding: 1rem; background: var(--bg-main); border: 1px solid var(--glass-border); border-radius: 10px;">
+                <label style="display: block; font-size: 0.85rem; margin-bottom: 0.5rem;">هل لديك كود خصم؟</label>
+                <div style="display: flex; gap: 5px;">
+                    <input type="text" id="coupon-input" placeholder="ادخل الكود هنا" style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
+                    <button onclick="applyCoupon()" style="padding: 8px 15px; background: var(--ocean-blue); color: white; border: none; border-radius: 5px; cursor: pointer;">تطبيق</button>
+                </div>
+                <p id="coupon-msg" style="font-size: 0.8rem; margin-top: 5px;"></p>
+            </div>
+
+            <div style="border-top: 2px solid #eee; padding-top: 1rem; margin-bottom: 2rem;">
+                <div style="display: flex; justify-content: space-between; font-size: 1.2rem; font-weight: bold; margin-bottom: 0.5rem;">
+                    <span>الإجمالي:</span>
+                    <span><span id="cart-total">0</span> <span class="icon-saudi_riyal"></span></span>
+                </div>
+                <div id="discount-area" style="display: none; justify-content: space-between; color: #16a34a; font-size: 0.95rem;">
+                    <span>الخصم:</span>
+                    <span>-<span id="discount-amount">0</span> <span class="icon-saudi_riyal"></span></span>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 0.8rem;">
+                <label style="font-size: 0.9rem; display: block; margin-bottom: 3px;">الاسم:</label>
+                <input type="text" id="customer-name" placeholder="اسمك الكريم" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px;" readonly>
+            </div>
+            <div style="margin-bottom: 0.8rem;">
+                <label style="font-size: 0.9rem; display: block; margin-bottom: 3px;">رقم الجوال:</label>
+                <input type="tel" id="customer-phone" placeholder="05xxxxxxxx" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px;" readonly>
+            </div>
+            <div style="margin-bottom: 0.8rem;">
+                <label style="font-size: 0.9rem; display: block; margin-bottom: 3px;">البريد الإلكتروني (اختياري):</label>
+                <input type="email" id="customer-email" placeholder="example@email.com" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px;" readonly>
+            </div>
+
+            <!-- Loyalty Points Section -->
+            <div id="loyalty-points-container" style="display: block; margin-bottom: 1rem; padding: 1rem; background: var(--bg-card); border: 1px solid var(--sandy-gold); border-radius: 10px;">
+                <p style="font-size: 0.9rem; margin-bottom: 5px;"><i class="fas fa-star" style="color: var(--sandy-gold);"></i> رصيد نقاطك: <strong id="loyalty-points-balance">0</strong> نقطة</p>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 10px;">(ستحصل على <span id="new-points-preview">0</span> نقطة من هذا الطلب)</p>
+                <div id="loyalty-redeem-section" style="display: none; border-top: 1px solid #fde68a; padding-top: 10px;">
+                    <label style="font-size: 0.85rem; cursor: pointer; color: #b45309; font-weight: bold; display: flex; align-items: center; gap: 5px;">
+                        <input type="checkbox" id="redeem-points-checkbox" onchange="calculateTotal()"> 
+                        استبدال 100 نقطة بوجبة مجانية (تُخصم من أعلى صنف سعراً)!
+                    </label>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 1rem;">
+                <label style="font-size: 0.9rem; display: block; margin-bottom: 5px;">نوع الطلب:</label>
+                <div style="display: flex; gap: 10px;">
+                    <label style="font-size: 0.85rem; cursor: pointer;"><input type="radio" name="order-type" value="سفري" checked> سفري</label>
+                    <label style="font-size: 0.85rem; cursor: pointer;"><input type="radio" name="order-type" value="محلي"> محلي</label>
+                </div>
+            </div>
+            <div style="margin-bottom: 1rem;">
+                <label style="font-size: 0.9rem; display: block; margin-bottom: 5px;">طريقة الدفع:</label>
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <label style="font-size: 0.85rem; cursor: pointer;"><input type="radio" name="payment-method" value="كاش (عند الاستلام)" checked> كاش (عند الاستلام)</label>
+                    <label style="font-size: 0.85rem; cursor: pointer;"><input type="radio" name="payment-method" value="شبكة (عند الاستلام)"> شبكة (عند الاستلام)</label>
+                    <label style="font-size: 0.85rem; cursor: pointer;"><input type="radio" name="payment-method" value="تحويل بنكي"> تحويل بنكي</label>
+                    <label id="payment-online-wrapper" style="font-size: 0.85rem; cursor: pointer;"><input type="radio" name="payment-method" value="دفع إلكتروني"> دفع إلكتروني (بطاقة ائتمانية / مدى)</label>
+                </div>
+            </div>
+            <div style="margin-bottom: 1rem;">
+                <label style="font-size: 0.9rem; display: block; margin-bottom: 5px;">ملاحظات:</label>
+                <textarea id="order-notes" placeholder="أي ملاحظات إضافية على الطلب..." style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px; height: 60px; font-family: inherit; resize: none;"></textarea>
+            </div>
+        </div>
+        <div style="padding: 1rem 2rem 2rem 2rem; flex-shrink: 0; background: var(--wave-white); border-top: 1px solid #eee;">
+            <button class="btn-primary" style="width: 100%;" onclick="checkout()">إتمام الطلب</button>
+        </div>
+    </div>
+
+    <!-- Payment Mockup Modal -->
+    <div id="payment-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 3000; align-items: center; justify-content: center;">
+        <div style="background: var(--wave-white); padding: 2rem; border-radius: 15px; width: 90%; max-width: 400px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
+            <h3 style="text-align: center; margin-bottom: 1.5rem; color: var(--ocean-blue);"><i class="fas fa-credit-card"></i> بوابة الدفع الإلكتروني</h3>
+            <div style="margin-bottom: 1rem;">
+                <label style="display: block; font-size: 0.9rem; margin-bottom: 5px;">رقم البطاقة</label>
+                <input type="text" placeholder="0000 0000 0000 0000" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;" required>
+            </div>
+            <div style="display: flex; gap: 10px; margin-bottom: 1.5rem;">
+                <div style="flex: 1;">
+                    <label style="display: block; font-size: 0.9rem; margin-bottom: 5px;">تاريخ الانتهاء</label>
+                    <input type="text" placeholder="MM/YY" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;" required>
+                </div>
+                <div style="flex: 1;">
+                    <label style="display: block; font-size: 0.9rem; margin-bottom: 5px;">رمز الأمان (CVV)</label>
+                    <input type="text" placeholder="123" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;" required>
+                </div>
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn-primary" style="flex: 1; background: #28a745; border-color: #28a745;" onclick="processPayment()">تأكيد الدفع</button>
+                <button style="flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 5px; cursor: pointer; background: #f8f9fa;" onclick="closePaymentModal()">إلغاء</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Advanced: Announcement Popup Modal -->
+    <div id="announcement-popup" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 4000; align-items: center; justify-content: center; backdrop-filter: blur(5px);">
+        <div style="background: var(--wave-white); padding: 2.5rem; border-radius: 20px; width: 90%; max-width: 500px; text-align: center; position: relative; animation: popupAnim 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+            <button onclick="closePopup()" style="position: absolute; top: 15px; left: 15px; border: none; background: none; font-size: 1.5rem; cursor: pointer; color: var(--text-muted);">&times;</button>
+            <div style="width: 70px; height: 70px; background: #fff7ed; color: #f97316; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem; margin: 0 auto 1.5rem;">
+                <i class="fas fa-bullhorn"></i>
+            </div>
+            <h2 id="popup-title-el" style="margin-bottom: 1rem; color: var(--ocean-blue);">تنبيه هام</h2>
+            <p id="popup-text-el" style="color: var(--text-muted); line-height: 1.6; margin-bottom: 2rem;">مرحباً بكم في مطعم أمواج الصياد!</p>
+            <button class="btn-primary" onclick="closePopup()" style="width: 100%;">فهمت</button>
+        </div>
+    </div>
+    <!-- Profile & Auth Modal -->
+    <div id="auth-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 5000; align-items: center; justify-content: center; backdrop-filter: blur(5px);">
+        <div style="background: var(--wave-white); padding: 2rem; border-radius: 20px; width: 90%; max-width: 400px; box-shadow: 0 20px 40px rgba(0,0,0,0.2); position: relative; text-align: center;">
+            <button onclick="closeProfileModal()" style="position: absolute; top: 15px; left: 15px; border: none; background: none; font-size: 1.5rem; cursor: pointer; color: var(--text-muted);">&times;</button>
+            
+            <!-- Profile View (Shown when logged in) -->
+            <div id="profile-view" style="display: none;">
+                <div style="width: 80px; height: 80px; background: #f1f5f9; color: var(--ocean-blue); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; margin: 0 auto 1rem;">
+                    <i class="fas fa-user"></i>
+                </div>
+                <h3 id="profile-name" style="color: var(--primary-blue); margin-bottom: 0.5rem;"></h3>
+                <p id="profile-phone" style="color: var(--text-muted); margin-bottom: 1.5rem; font-size: 0.9rem;"></p>
+                <div style="background: #fffbeb; border: 1px solid #fde68a; padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem;">
+                    <h4 style="color: #b45309; margin-bottom: 0.5rem;">رصيد النقاط</h4>
+                    <div style="font-size: 2.5rem; font-weight: bold; color: var(--sandy-gold);">
+                        <i class="fas fa-star" style="font-size: 2rem;"></i> <span id="profile-points">0</span>
+                    </div>
+                </div>
+
+                <div style="text-align: right; margin-bottom: 1.5rem;">
+                    <h4 style="color: var(--primary-blue); margin-bottom: 10px; border-bottom: 2px solid #eee; padding-bottom: 5px;"><i class="fas fa-file-invoice"></i> فواتيرك السابقة</h4>
+                    <div id="profile-orders-list" style="max-height: 250px; overflow-y: auto; padding-left: 5px;">
+                        <p style="color: var(--text-muted); font-size: 0.85rem; text-align: center;">لا توجد طلبات سابقة بعد.</p>
+                    </div>
+                </div>
+
+                <button onclick="processLogout()" style="width: 100%; padding: 10px; border: 1px solid #dc3545; color: #dc3545; background: var(--wave-white); border-radius: 5px; cursor: pointer; font-weight: bold;">تسجيل الخروج</button>
+            </div>
+
+            <!-- Auth View (Shown when not logged in) -->
+            <div id="auth-view" style="display: block;">
+                <h3 id="auth-title" style="color: var(--primary-blue); margin-bottom: 1.5rem;">تسجيل الدخول</h3>
+                
+                <div style="display: flex; justify-content: center; gap: 20px; margin-bottom: 1.5rem; border-bottom: 1px solid #eee; padding-bottom: 10px;">
+                    <button id="tab-login" onclick="switchAuthTab('login')" style="background:none; border:none; font-weight:bold; cursor:pointer; color: var(--ocean-blue);">دخول</button>
+                    <button id="tab-register" onclick="switchAuthTab('register')" style="background:none; border:none; font-weight:bold; cursor:pointer; color: var(--text-muted);">إنشاء حساب</button>
+                </div>
+
+                <!-- Login Form -->
+                <div id="form-login" style="display: block; text-align: right;">
+                    <input type="tel" id="login-phone" placeholder="رقم الجوال" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 1rem;">
+                    <input type="password" id="login-password" placeholder="كلمة المرور" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 1rem;">
+                    <button class="btn-primary" style="width: 100%;" onclick="processLogin()">دخول</button>
+                </div>
+
+                <!-- Register Form -->
+                <div id="form-register" style="display: none; text-align: right;">
+                    <input type="text" id="reg-name" placeholder="الاسم" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 1rem;">
+                    <input type="tel" id="reg-phone" placeholder="رقم الجوال" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 1rem;">
+                    <input type="password" id="reg-password" placeholder="كلمة المرور" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 1rem;">
+                    <button class="btn-primary" style="width: 100%;" onclick="processRegister()">إنشاء حساب</button>
+                </div>
+                <p id="auth-error" style="color: #dc3545; font-size: 0.85rem; margin-top: 1rem; display: none;"></p>
+            </div>
+        </div>
+    </div>
+    <!-- Shopping Cart Sidebar End -->
+    <style>
+        @keyframes popupAnim { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        
+        /* Custom Scrollbar for Cart */
+        .cart-scroll-area::-webkit-scrollbar {
+            width: 6px;
+        }
+        .cart-scroll-area::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        .cart-scroll-area::-webkit-scrollbar-thumb {
+            background: var(--ocean-blue);
+            border-radius: 10px;
+        }
+        .cart-scroll-area::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-blue);
+        }
+        
+        /* Compact UI for Cart Items */
+        #cart-items > div {
+            padding: 8px 0;
+            border-bottom: 1px dashed #eee;
+            font-size: 0.9rem;
+        }
+    </style>
+
+    <!-- Developer Info Modal -->
+    <div id="developer-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 6000; align-items: center; justify-content: center; backdrop-filter: blur(10px);">
+        <div class="glass-panel" style="padding: 2.5rem; border-radius: 20px; width: 90%; max-width: 450px; text-align: center; position: relative; color: var(--text-main);">
+            <button onclick="closeDeveloperModal()" style="position: absolute; top: 15px; left: 15px; border: none; background: none; font-size: 1.5rem; cursor: pointer; color: var(--sandy-gold);">&times;</button>
+            <div style="display: flex; justify-content: center; gap: 15px; margin-bottom: 1.5rem;">
+                <div style="width: 85px; height: 85px; border-radius: 50%; border: 3px solid var(--sandy-gold); overflow: hidden; background: var(--deep-blue);">
+                    <img src="dev_labib_real.jpg" alt="المهندس لبيب" style="width: 100%; height: 100%; object-fit: cover;">
+                </div>
+                <div style="width: 85px; height: 85px; border-radius: 50%; border: 3px solid var(--sandy-gold); overflow: hidden; background: var(--deep-blue);">
+                    <img src="dev_rashid_real.jpg" alt="المهندس رشيد" style="width: 100%; height: 100%; object-fit: cover; object-position: center top;">
+                </div>
+            </div>
+            <h2 style="margin-bottom: 0.2rem; font-family: 'Playfair Display', serif;">المهندس لبيب محفوظ الكلعي</h2>
+            <h2 style="margin-bottom: 0.5rem; font-family: 'Playfair Display', serif;">المهندس رشيد علي أحمد</h2>
+            <p style="color: var(--sandy-gold); font-weight: bold; margin-bottom: 1rem;">مطورون وحلول ويب متقدمة</p>
+            <p style="font-size: 0.95rem; line-height: 1.8; margin-bottom: 2rem;">متخصصون في بناء تجارب الويب التفاعلية، وتطوير الأنظمة البرمجية المتكاملة للمطاعم والشركات، مع التركيز على الابتكار التقني وجماليات التصميم.</p>
+            
+            <div style="display: flex; justify-content: center; gap: 15px;">
+                <a href="https://wa.me/966546117271" target="_blank" style="flex: 1; padding: 12px; background: #25d366; color: white; border-radius: 10px; text-decoration: none; font-weight: bold;"><i class="fab fa-whatsapp"></i> تواصل معنا</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer style="background: var(--primary-blue); color: white; padding: 3rem 10%; text-align: center;">
+        <div style="margin-bottom: 2rem;">
+            <a href="#" id="link-instagram" target="_blank" style="color: white; margin: 0 1rem; font-size: 1.5rem;"><i class="fab fa-instagram"></i></a>
+            <a href="#" id="link-tiktok" target="_blank" style="color: white; margin: 0 1rem; font-size: 1.5rem;"><i class="fab fa-tiktok"></i></a>
+            <a href="https://wa.me/966546117271" id="link-whatsapp-footer" target="_blank" style="color: white; margin: 0 1rem; font-size: 1.5rem;"><i class="fab fa-whatsapp"></i></a>
+        </div>
+        <p>&copy; 2024 مطعم أمواج الصياد. جميع الحقوق محفوظة.</p>
+    </footer>
+
+    <!-- PDF Generation Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+    <script src="data.js"></script>
+    <script src="main.js"></script>
+
+    <script>
+        function toggleMobileNav() {
+            const nav = document.getElementById('mobile-nav');
+            const btn = document.getElementById('hamburger-btn');
+            const overlay = document.getElementById('nav-overlay');
+            nav.classList.toggle('open');
+            btn.classList.toggle('active');
+            overlay.classList.toggle('visible');
+            document.body.style.overflow = nav.classList.contains('open') ? 'hidden' : '';
+        }
+        function closeMobileNav() {
+            const nav = document.getElementById('mobile-nav');
+            const btn = document.getElementById('hamburger-btn');
+            const overlay = document.getElementById('nav-overlay');
+            nav.classList.remove('open');
+            btn.classList.remove('active');
+            overlay.classList.remove('visible');
+            document.body.style.overflow = '';
+        }
+        
+        // Register PWA Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(reg => console.log('PWA: Service Worker Registered', reg))
+                    .catch(err => console.log('PWA: Registration Failed', err));
+            });
+        }
+    </script>
+    <!-- Floating Theme Switcher -->
+    <div id="theme-switcher" style="position: fixed; left: 20px; bottom: 80px; z-index: 3000; display: flex; flex-direction: column; gap: 10px;">
+        <button onclick="setTheme('morning')" title="الوضع الصباحي" style="width: 45px; height: 45px; border-radius: 50%; border: 2px solid white; background: #fff5e6; color: #ff8c00; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.2);"><i class="fas fa-sun"></i></button>
+        <button onclick="setTheme('sunset')" title="وضع الغروب" style="width: 45px; height: 45px; border-radius: 50%; border: 2px solid white; background: #4a1d1d; color: #ff8c00; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.2);"><i class="fas fa-cloud-sun"></i></button>
+        <button onclick="setTheme('night')" title="الوضع الليلي" style="width: 45px; height: 45px; border-radius: 50%; border: 2px solid white; background: #020617; color: #38bdf8; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.2);"><i class="fas fa-moon"></i></button>
+    </div>
+    <!-- Floating Support Button -->
+    <div class="support-float" onclick="openSupportModal()">
+        <i class="fas fa-comments"></i>
+        <span class="badge">1</span>
+    </div>
+
+    <!-- Support Modal -->
+    <div id="support-modal" class="support-modal">
+        <div class="support-modal-content">
+            <button onclick="closeSupportModal()" style="position: absolute; top: 15px; left: 15px; border: none; background: none; font-size: 1.5rem; cursor: pointer; color: var(--text-muted);">&times;</button>
+            <div style="text-align: center; margin-bottom: 2rem;">
+                <h2 style="color: var(--ocean-blue);">كيف يمكننا مساعدتك؟</h2>
+                <p style="color: var(--text-muted);">اختر أحد موظفينا للتواصل معه مباشرة</p>
+            </div>
+            <!-- Populated dynamically from Firebase via main.js > renderSupportModal() -->
+            <div id="support-options-dynamic">
+                <div class="support-option" style="opacity:0.5; pointer-events:none;">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <div><h4 style="margin:0;">جاري التحميل...</h4></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function setTheme(t) {
+            document.body.setAttribute('data-theme', t);
+            localStorage.setItem('user-theme', t);
+        }
+    </script>
+</body>
+</html>

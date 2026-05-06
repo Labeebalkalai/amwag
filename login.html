@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تسجيل الدخول | إدارة أمواج الصياد</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, var(--deep-blue) 0%, var(--primary-blue) 100%);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+        .login-card {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 3rem;
+            border-radius: 20px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+            animation: fadeIn 0.8s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .login-card .logo {
+            color: var(--primary-blue);
+            font-size: 2rem;
+            margin-bottom: 2rem;
+            display: block;
+        }
+        .input-group {
+            margin-bottom: 1.5rem;
+            text-align: right;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-dark);
+            font-weight: 500;
+        }
+        .input-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #eee;
+            border-radius: 10px;
+            outline: none;
+            transition: var(--transition);
+        }
+        .input-group input:focus {
+            border-color: var(--ocean-blue);
+            box-shadow: 0 0 10px rgba(0,90,156,0.1);
+        }
+        .btn-login {
+            width: 100%;
+            padding: 12px;
+            background: var(--sandy-gold);
+            color: var(--deep-blue);
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .btn-login:hover {
+            transform: scale(1.02);
+            box-shadow: 0 5px 15px rgba(212, 175, 55, 0.4);
+        }
+        .error-msg {
+            color: #dc3545;
+            font-size: 0.9rem;
+            margin-top: 1rem;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="login-card">
+        <a href="index.html" class="logo">
+            <img src="logo.png.jpeg" alt="أمواج الصياد" style="height: 60px; display: block; margin: 0 auto 10px; border-radius: 10px;">
+            إدارة أمواج الصياد
+        </a>
+        <h3 style="margin-bottom: 2rem; color: var(--text-dark);">نظام الحماية والوصول</h3>
+        
+        <div class="input-group">
+            <label>اسم المستخدم</label>
+            <input type="text" id="username" placeholder="أدخل اسم المستخدم">
+        </div>
+        
+        <div class="input-group">
+            <label>كلمة المرور</label>
+            <input type="password" id="password" placeholder="••••••••">
+        </div>
+
+        <button class="btn-login" onclick="login()">دخول للنظام</button>
+        <p id="error" class="error-msg">خطأ في اسم المستخدم أو كلمة المرور!</p>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+    <script>
+        // Same config as dashboard
+        const firebaseConfig = {
+            apiKey: "AIzaSyCSV-NGe0i_ae-fm_BXVmxWSexWJGWz89Y",
+            authDomain: "amwaj-sayyad.firebaseapp.com",
+            databaseURL: "https://amwaj-sayyad-default-rtdb.europe-west1.firebasedatabase.app/",
+            projectId: "amwaj-sayyad",
+            storageBucket: "amwaj-sayyad.firebasestorage.app",
+            messagingSenderId: "28428341574",
+            appId: "1:28428341574:web:d88c9559f342384083d547"
+        };
+        
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        async function login() {
+            const user = document.getElementById('username').value;
+            const pass = document.getElementById('password').value;
+            const error = document.getElementById('error');
+            const loginBtn = document.querySelector('.btn-login');
+
+            loginBtn.innerText = 'جاري التحقق...';
+            loginBtn.disabled = true;
+
+            try {
+                // Fetch dynamic password from Firebase
+                const snapshot = await db.ref('security/adminPass').once('value');
+                const adminPass = snapshot.val() || 'amwaj2025'; // Fallback to default
+
+                if (user === 'admin' && pass === adminPass) {
+                    localStorage.setItem('isLoggedIn', 'true');
+                    localStorage.setItem('loginTime', new Date().getTime().toString());
+                    window.location.href = 'dashboard.html';
+                } else {
+                    error.style.display = 'block';
+                    document.getElementById('password').value = '';
+                }
+            } catch (err) {
+                console.error("Login Error:", err);
+                // Fallback to local default if Firebase fails
+                if (user === 'admin' && pass === 'amwaj2025') {
+                    localStorage.setItem('isLoggedIn', 'true');
+                    localStorage.setItem('loginTime', new Date().getTime().toString());
+                    window.location.href = 'dashboard.html';
+                } else {
+                    error.style.display = 'block';
+                }
+            } finally {
+                loginBtn.innerText = 'دخول للنظام';
+                loginBtn.disabled = false;
+            }
+        }
+
+        document.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                login();
+            }
+        });
+    </script>
+</body>
+</html>
