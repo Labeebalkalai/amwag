@@ -955,11 +955,17 @@ function notifyAdminForNewMessage(chatId, info) {
     const title = "رسالة جديدة من العميل";
     const body = `${info.customerName || 'عميل'}: ${info.lastMessage}`;
 
-    // Check Android bridge first
-    if (window.AndroidBridge && typeof window.AndroidBridge.showAndroidNotification === 'function') {
+    // Check Android bridge first (supports multiple bridge names like AndroidBridge, Android, JSBridge)
+    const bridge = window.AndroidBridge || window.Android || window.JSBridge;
+    if (bridge && (typeof bridge.showAndroidNotification === 'function' || typeof bridge.showNotification === 'function')) {
         try {
-            window.AndroidBridge.showAndroidNotification(title, body);
+            if (typeof bridge.showAndroidNotification === 'function') {
+                bridge.showAndroidNotification(title, body);
+            } else {
+                bridge.showNotification(title, body);
+            }
             window.adminNotifiedChats.add(chatId);
+            console.log('Admin Chat Notification sent via Android Bridge successfully');
             return;
         } catch (e) {
             console.error('Android bridge notification failed:', e);
@@ -998,9 +1004,15 @@ function listenToChats() {
     }
     // Helper to notify customer via service worker
     window.showCustomerNotification = function(title, body, url, tag) {
-        if (window.AndroidBridge && typeof window.AndroidBridge.showAndroidNotification === 'function') {
+        const bridge = window.AndroidBridge || window.Android || window.JSBridge;
+        if (bridge && (typeof bridge.showAndroidNotification === 'function' || typeof bridge.showNotification === 'function')) {
             try {
-                window.AndroidBridge.showAndroidNotification(title, body);
+                if (typeof bridge.showAndroidNotification === 'function') {
+                    bridge.showAndroidNotification(title, body);
+                } else {
+                    bridge.showNotification(title, body);
+                }
+                console.log('Customer Chat Notification sent via Android Bridge successfully');
                 return;
             } catch (e) {
                 console.error('Android bridge notification failed:', e);

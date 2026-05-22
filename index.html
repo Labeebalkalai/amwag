@@ -408,6 +408,11 @@
                     <input type="tel" id="login-phone" placeholder="رقم الجوال" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 1rem;">
                     <input type="password" id="login-password" placeholder="كلمة المرور" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 1rem;">
                     <button class="btn-primary" style="width: 100%;" onclick="processLogin()">دخول</button>
+                    <div style="text-align: center; margin-top: 1rem;">
+                        <a href="#" onclick="openRecoveryModal(); return false;" style="color: var(--ocean-blue); font-size: 0.85rem; text-decoration: none; opacity: 0.8;">
+                            <i class="fas fa-key"></i> نسيت كلمة المرور؟
+                        </a>
+                    </div>
                 </div>
 
                 <!-- Register Form -->
@@ -468,6 +473,95 @@
             
             <div style="display: flex; justify-content: center; gap: 15px;">
                 <a href="https://wa.me/966546117271" target="_blank" style="flex: 1; padding: 12px; background: #25d366; color: white; border-radius: 10px; text-decoration: none; font-weight: bold;"><i class="fab fa-whatsapp"></i> تواصل معنا</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Password Recovery Modal -->
+    <div id="recovery-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9000; align-items: center; justify-content: center; backdrop-filter: blur(8px);">
+        <div style="background: var(--wave-white); padding: 2.5rem; border-radius: 24px; width: 90%; max-width: 420px; box-shadow: 0 25px 60px rgba(0,0,0,0.3); position: relative; text-align: center; animation: popupAnim 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+            <button onclick="closeRecoveryModal()" style="position: absolute; top: 15px; left: 15px; border: none; background: rgba(0,0,0,0.05); width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text-muted); font-size: 1rem; transition: 0.3s;">&times;</button>
+
+            <!-- Step 1: Enter Phone -->
+            <div id="recovery-step-1">
+                <div style="width: 70px; height: 70px; background: linear-gradient(135deg, var(--ocean-blue), var(--primary-blue)); border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 2rem; color: white; margin: 0 auto 1.5rem; box-shadow: 0 10px 25px rgba(0,90,156,0.3);">
+                    <i class="fas fa-key"></i>
+                </div>
+                <h2 style="color: var(--primary-blue); margin-bottom: 0.5rem; font-family: 'Playfair Display', serif;">استعادة كلمة المرور</h2>
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem; line-height: 1.6;">أدخل اسمك الكريم ورقم جوالك المسجل لتأكيد هويتك واستعادة حسابك</p>
+                
+                <div style="text-align: right; margin-bottom: 1rem;">
+                    <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-main);">الاسم المسجل</label>
+                    <div style="position: relative;">
+                        <i class="fas fa-user" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: var(--ocean-blue);"></i>
+                        <input type="text" id="recovery-name" placeholder="أدخل اسمك المسجل كاملًا" style="width: 100%; padding: 12px 45px 12px 12px; border: 2px solid #e2e8f0; border-radius: 12px; font-size: 1rem; outline: none; transition: 0.3s; box-sizing: border-box;" onfocus="this.style.borderColor='var(--ocean-blue)'" onblur="this.style.borderColor='#e2e8f0'" onkeypress="if(event.key==='Enter') processRecover()">
+                    </div>
+                </div>
+
+                <div style="text-align: right;">
+                    <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-main);">رقم الجوال المسجل</label>
+                    <div style="position: relative;">
+                        <i class="fas fa-mobile-alt" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: var(--ocean-blue);"></i>
+                        <input type="tel" id="recovery-phone" placeholder="05xxxxxxxx" style="width: 100%; padding: 12px 45px 12px 12px; border: 2px solid #e2e8f0; border-radius: 12px; font-size: 1rem; outline: none; transition: 0.3s; box-sizing: border-box; direction: ltr; text-align: left;" onfocus="this.style.borderColor='var(--ocean-blue)'" onblur="this.style.borderColor='#e2e8f0'" onkeypress="if(event.key==='Enter') processRecover()">
+                    </div>
+                </div>
+                <p id="recovery-error" style="color: #dc3545; font-size: 0.85rem; margin-top: 0.75rem; display: none; text-align: right;"></p>
+                <button onclick="processRecover()" id="recovery-btn" class="btn-primary" style="width: 100%; margin-top: 1.5rem; padding: 1rem; font-size: 1rem;">
+                    <i class="fas fa-search"></i> بحث عن الحساب
+                </button>
+            </div>
+
+            <!-- Step 2: Show Account Info -->
+            <div id="recovery-step-2" style="display: none;">
+                <div style="width: 70px; height: 70px; background: linear-gradient(135deg, #10b981, #059669); border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 2rem; color: white; margin: 0 auto 1.5rem; box-shadow: 0 10px 25px rgba(16,185,129,0.3);">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <h2 style="color: #059669; margin-bottom: 0.5rem;">تم العثور على حسابك</h2>
+                <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.5rem;">إليك بيانات حسابك المسجل</p>
+
+                <div style="background: linear-gradient(135deg, #f0fdf4, #dcfce7); border: 1px solid #86efac; border-radius: 16px; padding: 1.5rem; text-align: right; margin-bottom: 1.5rem;">
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px dashed #86efac;">
+                        <div style="width: 45px; height: 45px; background: #059669; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; flex-shrink: 0;">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div>
+                            <p style="font-size: 0.75rem; color: #6b7280; margin: 0;">الاسم المسجل</p>
+                            <p id="recovery-show-name" style="font-weight: 700; color: var(--primary-blue); margin: 0; font-size: 1rem;"></p>
+                        </div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px dashed #86efac;">
+                        <div style="width: 45px; height: 45px; background: #0ea5e9; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; flex-shrink: 0;">
+                            <i class="fas fa-mobile-alt"></i>
+                        </div>
+                        <div>
+                            <p style="font-size: 0.75rem; color: #6b7280; margin: 0;">رقم الجوال</p>
+                            <p id="recovery-show-phone" style="font-weight: 700; color: var(--primary-blue); margin: 0; font-size: 1rem; direction: ltr; text-align: right;"></p>
+                        </div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div style="width: 45px; height: 45px; background: #f59e0b; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; flex-shrink: 0;">
+                            <i class="fas fa-lock"></i>
+                        </div>
+                        <div style="flex: 1;">
+                            <p style="font-size: 0.75rem; color: #6b7280; margin: 0;">كلمة المرور</p>
+                            <div style="display: flex; align-items: center; gap: 8px; margin-top: 2px;">
+                                <p id="recovery-show-pass" style="font-weight: 700; color: var(--primary-blue); margin: 0; font-size: 1rem; letter-spacing: 3px; direction: ltr;">••••••••</p>
+                                <button onclick="toggleRecoveryPass()" id="recovery-eye-btn" style="background: none; border: none; cursor: pointer; color: #6b7280; font-size: 1rem; padding: 0;" title="إظهار/إخفاء">
+                                    <i class="fas fa-eye" id="recovery-eye-icon"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 10px;">
+                    <button onclick="loginFromRecovery()" class="btn-primary" style="flex: 1; padding: 0.9rem;">
+                        <i class="fas fa-sign-in-alt"></i> تسجيل الدخول الآن
+                    </button>
+                    <button onclick="resetRecoveryModal()" style="flex: 1; padding: 0.9rem; border: 2px solid var(--glass-border); border-radius: 12px; background: none; cursor: pointer; color: var(--text-muted); font-family: inherit; font-size: 0.9rem; transition: 0.3s;" onmouseover="this.style.background='var(--bg-card)'" onmouseout="this.style.background='none'">
+                        <i class="fas fa-arrow-right"></i> رجوع
+                    </button>
+                </div>
             </div>
         </div>
     </div>

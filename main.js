@@ -124,10 +124,16 @@ function dismissPrompt(el) {
 // === Core: Send Local Notification via SW        ===
 // =====================================================
 function sendLocalNotification(title, body, url = '/', tag = 'amwaj') {
-    // Check if running inside Android App via bridge
-    if (window.AndroidBridge && typeof window.AndroidBridge.showAndroidNotification === 'function') {
+    // Check if running inside Android App via bridge (supports multiple bridge names like AndroidBridge, Android, JSBridge)
+    const bridge = window.AndroidBridge || window.Android || window.JSBridge;
+    if (bridge && (typeof bridge.showAndroidNotification === 'function' || typeof bridge.showNotification === 'function')) {
         try {
-            window.AndroidBridge.showAndroidNotification(title, body);
+            if (typeof bridge.showAndroidNotification === 'function') {
+                bridge.showAndroidNotification(title, body);
+            } else {
+                bridge.showNotification(title, body);
+            }
+            console.log('SW: Notification sent via Android Bridge successfully');
             return;
         } catch (e) {
             console.error('Android bridge notification failed:', e);
@@ -457,9 +463,15 @@ function initCustomerChat() {
     const id = getChatId();
     // Helper to show admin notifications (if permission granted)
     window.showAdminNotification = function(title, body, url, tag) {
-        if (window.AndroidBridge && typeof window.AndroidBridge.showAndroidNotification === 'function') {
+        const bridge = window.AndroidBridge || window.Android || window.JSBridge;
+        if (bridge && (typeof bridge.showAndroidNotification === 'function' || typeof bridge.showNotification === 'function')) {
             try {
-                window.AndroidBridge.showAndroidNotification(title, body);
+                if (typeof bridge.showAndroidNotification === 'function') {
+                    bridge.showAndroidNotification(title, body);
+                } else {
+                    bridge.showNotification(title, body);
+                }
+                console.log('Admin Notification sent via Android Bridge successfully');
                 return;
             } catch (e) {
                 console.error('Android bridge notification failed:', e);
@@ -479,9 +491,15 @@ function initCustomerChat() {
     };
     if (navigator.serviceWorker && navigator.serviceWorker.controller) {
         window.showCustomerNotification = function(title, body, url, tag) {
-            if (window.AndroidBridge && typeof window.AndroidBridge.showAndroidNotification === 'function') {
+            const bridge = window.AndroidBridge || window.Android || window.JSBridge;
+            if (bridge && (typeof bridge.showAndroidNotification === 'function' || typeof bridge.showNotification === 'function')) {
                 try {
-                    window.AndroidBridge.showAndroidNotification(title, body);
+                    if (typeof bridge.showAndroidNotification === 'function') {
+                        bridge.showAndroidNotification(title, body);
+                    } else {
+                        bridge.showNotification(title, body);
+                    }
+                    console.log('Customer Notification sent via Android Bridge successfully');
                     return;
                 } catch (e) {
                     console.error('Android bridge notification failed:', e);
@@ -1488,6 +1506,232 @@ function processLogout() {
     localStorage.removeItem('loggedInCustomer');
     updateAuthUI();
     closeProfileModal();
+}
+
+// ===================================================
+// ===   PASSWORD RECOVERY SYSTEM                  ===
+// ===================================================
+
+let recoveredCustomerData = null; // Store the found customer temporarily
+let recoveryPassVisible = false;  // Track password visibility state
+
+function openRecoveryModal() {
+    // Close the auth modal first
+    const authModal = document.getElementById('auth-modal');
+    if (authModal) authModal.style.display = 'none';
+
+    // Open recovery modal
+    const modal = document.getElementById('recovery-modal');
+    if (modal) {
+        modal.style.display = 'flex';
+        resetRecoveryModal();
+        setTimeout(() => {
+            const phoneInput = document.getElementById('recovery-phone');
+            if (phoneInput) phoneInput.focus();
+        }, 300);
+    }
+}
+
+function closeRecoveryModal() {
+    const modal = document.getElementById('recovery-modal');
+    if (modal) modal.style.display = 'none';
+    recoveredCustomerData = null;
+    recoveryPassVisible = false;
+}
+
+function resetRecoveryModal() {
+    document.getElementById('recovery-step-1').style.display = 'block';
+    document.getElementById('recovery-step-2').style.display = 'none';
+    const nameEl = document.getElementById('recovery-name');
+    const phoneEl = document.getElementById('recovery-phone');
+    if (nameEl) {
+        nameEl.value = '';
+        nameEl.style.borderColor = '#e2e8f0';
+    }
+    if (phoneEl) {
+        phoneEl.value = '';
+        phoneEl.style.borderColor = '#e2e8f0';
+    }
+    document.getElementById('recovery-error').style.display = 'none';
+    document.getElementById('recovery-error').innerText = '';
+    recoveredCustomerData = null;
+    recoveryPassVisible = false;
+}
+
+function processRecover() {
+    const nameInput = document.getElementById('recovery-name');
+    const phoneInput = document.getElementById('recovery-phone');
+    const errorEl = document.getElementById('recovery-error');
+    const btn = document.getElementById('recovery-btn');
+    
+    const name = nameInput ? nameInput.value.trim() : '';
+    const phone = phoneInput ? phoneInput.value.trim() : '';
+
+    // Hide previous errors and reset borders
+    errorEl.style.display = 'none';
+    if (nameInput) nameInput.style.borderColor = '#e2e8f0';
+    if (phoneInput) phoneInput.style.borderColor = '#e2e8f0';
+
+    if (!name || !phone) {
+        errorEl.innerText = 'يرجى إدخال الاسم ورقم الجوال معًا';
+        errorEl.style.display = 'block';
+        if (!name && nameInput) nameInput.style.borderColor = '#dc3545';
+        if (!phone && phoneInput) phoneInput.style.borderColor = '#dc3545';
+        return;
+    }
+
+    if (!isFirebaseEnabled || !db) {
+        errorEl.innerText = 'هذه الميزة تتطلب الاتصال بالشبكة. يرجى المحاولة لاحقاً.';
+        errorEl.style.display = 'block';
+        return;
+    }
+
+    // Show loading state
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري البحث...';
+    btn.disabled = true;
+
+    db.ref('customers/' + phone).once('value').then(snapshot => {
+        const data = snapshot.val();
+
+        btn.innerHTML = '<i class="fas fa-search"></i> بحث عن الحساب';
+        btn.disabled = false;
+
+        if (!data) {
+            // Not found
+            errorEl.innerText = '❌ لا يوجد حساب مسجل بهذا الرقم. تأكد من الرقم أو قم بإنشاء حساب جديد.';
+            errorEl.style.display = 'block';
+            if (phoneInput) {
+                phoneInput.style.borderColor = '#dc3545';
+                phoneInput.style.animation = 'shake 0.4s ease';
+                setTimeout(() => { phoneInput.style.animation = ''; }, 400);
+            }
+            return;
+        }
+
+        // Arabic normalizer helper to handle spelling variations (e.g. أ vs ا, ة vs ه)
+        function normalizeArabic(text) {
+            if (!text) return '';
+            return text.trim().toLowerCase()
+                .replace(/[أإآ]/g, 'ا')
+                .replace(/ة/g, 'ه')
+                .replace(/ى/g, 'ي')
+                .replace(/\s+/g, ' ');
+        }
+
+        const normDbName = normalizeArabic(data.name);
+        const normEnteredName = normalizeArabic(name);
+
+        // Security check: Check if the entered name matches the database name
+        if (normDbName !== normEnteredName && !normDbName.includes(normEnteredName) && !normEnteredName.includes(normDbName)) {
+            errorEl.innerText = '❌ الاسم ورقم الجوال غير متطابقين. يرجى التأكد من الاسم المسجل.';
+            errorEl.style.display = 'block';
+            if (nameInput) {
+                nameInput.style.borderColor = '#dc3545';
+                nameInput.style.animation = 'shake 0.4s ease';
+                setTimeout(() => { nameInput.style.animation = ''; }, 400);
+            }
+            return;
+        }
+
+        // Found and verified! Store and display
+        recoveredCustomerData = data;
+        recoveryPassVisible = false;
+
+        // Populate step 2
+        document.getElementById('recovery-show-name').innerText = data.name || 'غير محدد';
+        document.getElementById('recovery-show-phone').innerText = data.phone || phone;
+        
+        // Show password masked by default
+        const passEl = document.getElementById('recovery-show-pass');
+        const eyeIcon = document.getElementById('recovery-eye-icon');
+        if (passEl) {
+            passEl.innerText = '••••••••';
+            passEl.setAttribute('data-pass', data.password || '');
+        }
+        if (eyeIcon) {
+            eyeIcon.className = 'fas fa-eye';
+        }
+
+        // Switch to step 2
+        document.getElementById('recovery-step-1').style.display = 'none';
+        document.getElementById('recovery-step-2').style.display = 'block';
+
+    }).catch(err => {
+        btn.innerHTML = '<i class="fas fa-search"></i> بحث عن الحساب';
+        btn.disabled = false;
+        errorEl.innerText = 'حدث خطأ أثناء البحث. يرجى المحاولة مرة أخرى.';
+        errorEl.style.display = 'block';
+        console.error('Recovery Error:', err);
+    });
+}
+
+function toggleRecoveryPass() {
+    const passEl = document.getElementById('recovery-show-pass');
+    const eyeIcon = document.getElementById('recovery-eye-icon');
+    if (!passEl || !recoveredCustomerData) return;
+
+    recoveryPassVisible = !recoveryPassVisible;
+    const actualPass = passEl.getAttribute('data-pass') || recoveredCustomerData.password || '';
+
+    if (recoveryPassVisible) {
+        passEl.innerText = actualPass || 'لا توجد كلمة مرور';
+        passEl.style.letterSpacing = '1px';
+        if (eyeIcon) eyeIcon.className = 'fas fa-eye-slash';
+    } else {
+        passEl.innerText = '••••••••';
+        passEl.style.letterSpacing = '3px';
+        if (eyeIcon) eyeIcon.className = 'fas fa-eye';
+    }
+}
+
+function loginFromRecovery() {
+    if (!recoveredCustomerData) return;
+
+    // Auto-login the customer
+    loggedInCustomer = recoveredCustomerData;
+    localStorage.setItem('loggedInCustomer', JSON.stringify(loggedInCustomer));
+    updateAuthUI();
+    
+    // Listen for real-time updates
+    if (isFirebaseEnabled && db) {
+        db.ref('customers/' + loggedInCustomer.phone).on('value', snap => {
+            if (snap.val()) {
+                loggedInCustomer = snap.val();
+                localStorage.setItem('loggedInCustomer', JSON.stringify(loggedInCustomer));
+                updateAuthUI();
+            }
+        });
+    }
+
+    // Close modal with a success message
+    closeRecoveryModal();
+    
+    // Show success toast
+    const toast = document.createElement('div');
+    toast.style.cssText = `
+        position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-80px);
+        background: linear-gradient(135deg, #059669, #10b981); color: white;
+        padding: 1rem 2rem; border-radius: 50px; z-index: 99999;
+        box-shadow: 0 15px 40px rgba(5,150,105,0.4);
+        display: flex; align-items: center; gap: 12px;
+        font-family: 'Inter', sans-serif; direction: rtl;
+        transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        border: 1px solid rgba(255,255,255,0.2);
+    `;
+    toast.innerHTML = `
+        <i class="fas fa-check-circle" style="font-size: 1.3rem;"></i>
+        <div>
+            <div style="font-weight: 700;">مرحباً ${loggedInCustomer.name.split(' ')[0]}! 👋</div>
+            <div style="font-size: 0.8rem; opacity: 0.9;">تم تسجيل الدخول بنجاح</div>
+        </div>
+    `;
+    document.body.appendChild(toast);
+    setTimeout(() => { toast.style.transform = 'translateX(-50%) translateY(0)'; }, 100);
+    setTimeout(() => {
+        toast.style.transform = 'translateX(-50%) translateY(-80px)';
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 400);
+    }, 3500);
 }
 
 function toggleCart() {
