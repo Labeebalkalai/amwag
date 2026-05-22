@@ -25,19 +25,32 @@ let currentDiscount = 0;
 let loggedInCustomer = JSON.parse(localStorage.getItem('loggedInCustomer')) || null;
 let customerPoints = 0; 
 
-// --- PWA & App Capabilities ---
-function initAppCapabilities() {
-    // Request Notification Permission
-    if ("Notification" in window) {
-        if (Notification.permission !== "granted" && Notification.permission !== "denied") {
-            // Prompt on first meaningful interaction or after a delay
+// =====================================================
+// ===   PWA, Service Worker & Notifications       ===
+// =====================================================
+
+let swRegistration = null;
+
+async function initAppCapabilities() {
+    // Register Service Worker
+    if ('serviceWorker' in navigator) {
+        try {
+            swRegistration = await navigator.serviceWorker.register('sw.js');
+            console.log('SW: Registered successfully');
+        } catch (err) {
+            console.warn('SW: Registration failed', err);
+        }
+    }
+
+    // Request Notification Permission with a friendly prompt
+    if ('Notification' in window) {
+        if (Notification.permission === 'default') {
+            // Show a custom in-page prompt after 4 seconds
             setTimeout(() => {
-                Notification.requestPermission().then(permission => {
-                    if (permission === "granted") {
-                        console.log("App: Notification permission granted.");
-                    }
-                });
-            }, 5000);
+                showNotificationPrompt();
+            }, 4000);
+        } else if (Notification.permission === 'granted') {
+            console.log('Notifications: Already granted');
         }
     }
 
@@ -47,6 +60,104 @@ function initAppCapabilities() {
         audio.src = 'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==';
         audio.play().catch(() => {});
     }, { once: true });
+}
+
+// Show a beautiful in-page notification permission prompt
+function showNotificationPrompt() {
+    if (Notification.permission !== 'default') return;
+    if (sessionStorage.getItem('notif-prompt-shown')) return;
+    sessionStorage.setItem('notif-prompt-shown', '1');
+
+    const prompt = document.createElement('div');
+    prompt.id = 'notif-permission-prompt';
+    prompt.style.cssText = `
+        position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(100px);
+        background: linear-gradient(135deg, #001f3f, #002d5a);
+        color: white; padding: 1rem 1.5rem; border-radius: 20px;
+        z-index: 99999; display: flex; align-items: center; gap: 15px;
+        box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+        border: 1px solid rgba(212,175,55,0.4);
+        max-width: 420px; width: calc(100% - 40px);
+        transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        font-family: 'Inter', sans-serif;
+        direction: rtl;
+    `;
+    prompt.innerHTML = `
+        <div style="background:rgba(212,175,55,0.2); width:45px; height:45px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+            <i class="fas fa-bell" style="color:#d4af37; font-size:1.3rem;"></i>
+        </div>
+        <div style="flex:1;">
+            <div style="font-weight:700; font-size:0.95rem; margin-bottom:4px;">فعّل الإشعارات 🔔</div>
+            <div style="font-size:0.8rem; opacity:0.8; line-height:1.4;">احصل على إشعار فوري عند تحديث طلبك أو رد فريقنا عليك</div>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:8px; flex-shrink:0;">
+            <button id="notif-allow-btn" style="background:#d4af37; color:#001f3f; border:none; padding:7px 14px; border-radius:20px; font-weight:700; cursor:pointer; font-size:0.8rem; white-space:nowrap;">السماح</button>
+            <button id="notif-deny-btn" style="background:transparent; color:rgba(255,255,255,0.6); border:1px solid rgba(255,255,255,0.2); padding:5px 14px; border-radius:20px; cursor:pointer; font-size:0.75rem; white-space:nowrap;">لاحقاً</button>
+        </div>
+    `;
+    document.body.appendChild(prompt);
+    setTimeout(() => {
+        prompt.style.transform = 'translateX(-50%) translateY(0)';
+    }, 100);
+
+    document.getElementById('notif-allow-btn').onclick = async () => {
+        dismissPrompt(prompt);
+        const perm = await Notification.requestPermission();
+        if (perm === 'granted') {
+            sendLocalNotification('أمواج الصياد 🐟', 'تم تفعيل الإشعارات بنجاح! ستصلك تحديثات طلباتك ورسائل فريقنا فوراً.', 'index.html', 'welcome');
+        }
+    };
+    document.getElementById('notif-deny-btn').onclick = () => dismissPrompt(prompt);
+
+    // Auto-dismiss after 12 seconds
+    setTimeout(() => dismissPrompt(prompt), 12000);
+}
+
+function dismissPrompt(el) {
+    if (!el || !el.parentNode) return;
+    el.style.transform = 'translateX(-50%) translateY(120px)';
+    el.style.opacity = '0';
+    setTimeout(() => el.remove(), 400);
+}
+
+// =====================================================
+// === Core: Send Local Notification via SW        ===
+// =====================================================
+function sendLocalNotification(title, body, url = '/', tag = 'amwaj') {
+    if (!('Notification' in window)) return;
+    if (Notification.permission !== 'granted') return;
+
+    // Use SW if available (works when tab is closed/background)
+    if (swRegistration && swRegistration.active) {
+        swRegistration.active.postMessage({
+            type: 'SHOW_NOTIFICATION',
+            title,
+            body,
+            url,
+            tag,
+            requireInteraction: true
+        });
+    } else if (navigator.serviceWorker.controller) {
+        // Fallback to current controller
+        navigator.serviceWorker.controller.postMessage({
+            type: 'SHOW_NOTIFICATION',
+            title,
+            body,
+            url,
+            tag,
+            requireInteraction: true
+        });
+    } else {
+        // Last resort: browser Notification API (only works when tab is open)
+        try {
+            new Notification(title, {
+                body,
+                icon: 'logo.png.jpeg',
+                tag,
+                dir: 'rtl'
+            });
+        } catch (e) { console.warn('Notification failed:', e); }
+    }
 }
 
 function playNotificationSound() {
@@ -320,6 +431,7 @@ function toggleChatWidget() {
 
         // Start listening
         initCustomerChat();
+        initOrderNotifications();
 
         // Focus input
         setTimeout(() => {
@@ -333,6 +445,33 @@ function initCustomerChat() {
     if (chatListener) return; // Already listening
 
     const id = getChatId();
+    // Helper to show admin notifications (if permission granted)
+    window.showAdminNotification = function(title, body, url, tag) {
+        if ("Notification" in window) {
+            if (Notification.permission === "granted") {
+                new Notification(title, { body: body, icon: 'logo.png.jpeg', tag: tag, data: { url: url } });
+            } else if (Notification.permission !== "denied") {
+                Notification.requestPermission().then(p => {
+                    if (p === "granted") {
+                        new Notification(title, { body: body, icon: 'logo.png.jpeg', tag: tag, data: { url: url } });
+                    }
+                });
+            }
+        }
+    };
+    if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+        window.showCustomerNotification = function(title, body, url, tag) {
+            navigator.serviceWorker.controller.postMessage({
+                type: 'SHOW_NOTIFICATION',
+                title: title,
+                body: body,
+                url: url || '/',
+                tag: tag || 'chat'
+            });
+        };
+    }
+    // Track last seen admin message timestamp to avoid duplicate notifications
+    window.lastAdminMsgTimestamp = 0;
 
     // Create/update chat metadata
     db.ref('chats/' + id + '/info').update({
@@ -387,6 +526,29 @@ function renderCustomerChatMessages(msgsObj) {
 
     container.innerHTML = html;
     container.scrollTop = container.scrollHeight;
+
+    // After rendering, check for new admin messages and notify if page is not focused
+    if (msgsObj) {
+        const msgs = Object.values(msgsObj);
+        const newAdminMsgs = msgs.filter(m => m.sender === 'admin' && m.timestamp > (window.lastAdminMsgTimestamp || 0));
+        if (newAdminMsgs.length > 0) {
+            // Update the last seen timestamp
+            const latest = Math.max(...newAdminMsgs.map(m => m.timestamp));
+            window.lastAdminMsgTimestamp = latest;
+            // Show notification if user is not actively viewing the chat widget
+            if (document.hidden || !chatWidgetOpen) {
+                const latestMsg = newAdminMsgs[newAdminMsgs.length - 1];
+                const time = new Date(latestMsg.timestamp).toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' });
+                const title = 'رسالة جديدة من الدعم';
+                const body = `${latestMsg.text} • ${time}`;
+                window.showCustomerNotification(title, body, '/', 'chat');
+                // Play sound for notification
+                if (typeof playNotificationSound === 'function') {
+                    playNotificationSound();
+                }
+            }
+        }
+    }
 }
 
 function sendChatMessage() {
@@ -415,8 +577,10 @@ function sendChatMessage() {
         unreadByAdmin: true
     });
 
-    input.value = '';
-    input.focus();
+    // After sending message, notify admin (if admin page active)
+    if (window.showAdminNotification) {
+        window.showAdminNotification('رسالة جديدة من العميل', text, '/', 'chat');
+    }
 }
 
 // ===================================================
@@ -650,12 +814,19 @@ function renderMenu(filter = 'all', searchQuery = '') {
 
         card.className = 'card';
 
+        // Calculate quantity in cart
+        const cartQty = cart.filter(i => i.id === item.id).reduce((sum, i) => sum + i.quantity, 0);
+
         card.innerHTML = `
+            <div class="card-qty-badge" id="qty-badge-${item.id}" style="position: absolute; top: 15px; left: 15px; width: 32px; height: 32px; border-radius: 50%; display: ${cartQty > 0 ? 'flex' : 'none'}; align-items: center; justify-content: center; font-weight: bold; font-size: 0.95rem; z-index: 5;">${cartQty}</div>
             ${isUnavailable ? `<div style="position:absolute;top:10px;right:10px;background:#dc2626;color:white;padding:4px 12px;border-radius:20px;font-size:0.75rem;font-weight:bold;z-index:2;">🚫 نفذت الكمية</div>` : ''}
             <img src="${item.image}" alt="${item.name}" style="${isUnavailable ? 'filter: grayscale(70%);' : ''}">
             <div class="card-content">
-                <h3 style="${isUnavailable ? 'color:#9ca3af;' : ''}">${item.name}</h3>
-                ${item.calories ? `<p class="item-calories">${item.calories} سعرة حرارية</p>` : ''}
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; flex-wrap: wrap; gap: 5px;">
+                    <h3 style="margin: 0; ${isUnavailable ? 'color:#9ca3af;' : ''}">${item.name}</h3>
+                    <span class="selected-qty-text" id="qty-text-${item.id}" style="display: ${cartQty > 0 ? 'inline-block' : 'none'}; padding: 2px 8px; border-radius: 20px; font-size: 0.8rem; font-weight: bold;">مختار: ${cartQty}</span>
+                </div>
+                ${item.calories ? `<p class="item-calories" style="margin-top: 0;">${item.calories} سعرة حرارية</p>` : ''}
                 ${isUnavailable ? '' : customInputUI}
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                     <span id="price-${item.id}" style="font-weight: bold; color: ${isUnavailable ? '#9ca3af' : 'var(--ocean-blue)'};">${item.price || item.pricePerKilo} <span class="icon-saudi_riyal"></span></span>
@@ -663,7 +834,16 @@ function renderMenu(filter = 'all', searchQuery = '') {
                         `<button class="add-to-cart" disabled style="background:#e5e7eb;color:#9ca3af;cursor:not-allowed;border:none;">🚫 نفذت الكمية</button>` :
                         isCurrentlyClosed ?
                             `<button class="add-to-cart" disabled style="background: #ccc; cursor: not-allowed;">المطعم مغلق</button>` :
-                            `<button class="add-to-cart" onclick="addToCart(${item.id})"><i class="fas fa-plus"></i> إضافة للسلة</button>`
+                            `
+                            <div id="btn-add-${item.id}" style="display: ${cartQty > 0 ? 'none' : 'block'};">
+                                <button class="add-to-cart" onclick="addToCart(${item.id})"><i class="fas fa-plus"></i> إضافة للسلة</button>
+                            </div>
+                            <div id="btn-qty-${item.id}" style="display: ${cartQty > 0 ? 'flex' : 'none'}; align-items: center; justify-content: space-between; background: #f1f5f9; padding: 5px; border-radius: 8px; width: 110px;">
+                                <button onclick="addToCart(${item.id})" style="background: #10b981; color: white; border: none; border-radius: 5px; width: 30px; height: 30px; cursor: pointer; font-size: 1.2rem; display: flex; align-items: center; justify-content: center;">+</button>
+                                <span id="qty-val-${item.id}" style="font-weight: bold; font-size: 1.1rem; color: #1e293b;">${cartQty}</span>
+                                <button onclick="decreaseQuantityFromMenu(${item.id})" style="background: #ef4444; color: white; border: none; border-radius: 5px; width: 30px; height: 30px; cursor: pointer; font-size: 1.2rem; display: flex; align-items: center; justify-content: center;">-</button>
+                            </div>
+                            `
                     }
                 </div>
             </div>
@@ -736,14 +916,16 @@ function addToCart(id) {
     updateCart();
     
     // Visual feedback
-    const btn = event.target;
-    const originalText = btn.innerHTML;
-    btn.innerHTML = "تمت الإضافة!";
-    btn.style.background = "#28a745";
-    setTimeout(() => {
-        btn.innerHTML = originalText;
-        btn.style.background = "var(--ocean-blue)";
-    }, 1000);
+    if (event && event.target && event.target.classList.contains('add-to-cart')) {
+        const btn = event.target;
+        const originalText = btn.innerHTML;
+        btn.innerHTML = "تمت الإضافة!";
+        btn.style.background = "#28a745";
+        setTimeout(() => {
+            btn.innerHTML = originalText;
+            btn.style.background = "var(--ocean-blue)";
+        }, 1000);
+    }
 }
 
 function updateCart() {
@@ -751,6 +933,42 @@ function updateCart() {
     const count = cart.reduce((acc, item) => acc + item.quantity, 0);
     document.getElementById('cart-count').innerText = count;
     renderCartItems();
+    updateMenuQuantities();
+}
+
+function updateMenuQuantities() {
+    if (typeof menuItems !== 'undefined' && Array.isArray(menuItems)) {
+        menuItems.forEach(item => {
+            const cartQty = cart.filter(i => i.id === item.id).reduce((sum, i) => sum + i.quantity, 0);
+            
+            const badge = document.getElementById(`qty-badge-${item.id}`);
+            if (badge) {
+                badge.innerText = cartQty;
+                badge.style.display = cartQty > 0 ? 'flex' : 'none';
+            }
+            
+            const label = document.getElementById(`qty-text-${item.id}`);
+            if (label) {
+                label.innerText = `مختار: ${cartQty}`;
+                label.style.display = cartQty > 0 ? 'inline-block' : 'none';
+            }
+
+            const btnAdd = document.getElementById(`btn-add-${item.id}`);
+            const btnQty = document.getElementById(`btn-qty-${item.id}`);
+            const qtyVal = document.getElementById(`qty-val-${item.id}`);
+            
+            if (btnAdd && btnQty && qtyVal) {
+                qtyVal.innerText = cartQty;
+                if (cartQty > 0) {
+                    btnAdd.style.display = 'none';
+                    btnQty.style.display = 'flex';
+                } else {
+                    btnAdd.style.display = 'block';
+                    btnQty.style.display = 'none';
+                }
+            }
+        });
+    }
 }
 
 function renderCartItems() {
@@ -770,7 +988,12 @@ function renderCartItems() {
         itemEl.style.marginBottom = '1rem';
         itemEl.innerHTML = `
             <div>
-                <strong>${item.name}</strong> ${item.selectedPrep ? `[${item.selectedPrep}]` : ''} ${item.selectedWeight ? `(${item.selectedWeight})` : ''} x ${item.quantity}
+                <strong>${item.name}</strong> ${item.selectedPrep ? `[${item.selectedPrep}]` : ''} ${item.selectedWeight ? `(${item.selectedWeight})` : ''} 
+                <div style="display: inline-flex; align-items: center; margin-right: 10px; gap: 5px; background: #f1f5f9; padding: 2px 8px; border-radius: 20px;">
+                    <button onclick="increaseQuantity('${item.cartId}')" style="background: none; border: none; cursor: pointer; font-size: 1.1rem; color: #10b981; padding: 0 5px;">+</button>
+                    <span style="font-weight: bold; min-width: 20px; text-align: center;">${item.quantity}</span>
+                    <button onclick="decreaseQuantity('${item.cartId}')" style="background: none; border: none; cursor: pointer; font-size: 1.1rem; color: #ef4444; padding: 0 5px;">-</button>
+                </div>
             </div>
             <div>
                     <span>${itemTotal.toFixed(2)} <span class="icon-saudi_riyal"></span></span>
@@ -1637,7 +1860,7 @@ function applySettings(settings) {
     // --- Advanced Features ---
     
     // 1. Social Media Links
-    if (settings.instagram) document.getElementById('link-instagram').href = settings.instagram;
+    if (settings.snapchat) document.getElementById('link-snapchat').href = settings.snapchat;
     if (settings.tiktok) document.getElementById('link-tiktok').href = settings.tiktok;
     if (settings.whatsapp) {
         document.getElementById('link-whatsapp-footer').href = `https://wa.me/${settings.whatsapp}`;
@@ -1794,6 +2017,47 @@ function translateCategory(cat) {
 function removeFromCart(cartId) {
     cart = cart.filter(item => item.cartId !== cartId);
     updateCart();
+}
+
+function increaseQuantity(cartId) {
+    const item = cart.find(i => i.cartId === cartId);
+    if (item) {
+        item.quantity++;
+        updateCart();
+    }
+}
+
+function decreaseQuantity(cartId) {
+    const item = cart.find(i => i.cartId === cartId);
+    if (item) {
+        if (item.quantity > 1) {
+            item.quantity--;
+        } else {
+            cart = cart.filter(i => i.cartId !== cartId);
+        }
+        updateCart();
+    }
+}
+
+function decreaseQuantityFromMenu(id) {
+    const item = menuItems.find(i => i.id === id);
+    if (!item) return;
+    
+    let selectedWeight = null;
+    let selectedPrep = null;
+
+    if (item.category === 'grilled') {
+        const prepSelect = document.getElementById(`prep-${id}`);
+        if (prepSelect) selectedPrep = prepSelect.value;
+    }
+
+    if (item.pricePerKilo) {
+        const weightInput = document.getElementById(`weight-${id}`);
+        if (weightInput) selectedWeight = weightInput.value + " جرام";
+    }
+
+    const cartId = item.id + (selectedWeight ? '-' + selectedWeight : '') + (selectedPrep ? '-' + selectedPrep : '');
+    decreaseQuantity(cartId);
 }
 
 function calculateTotal() {

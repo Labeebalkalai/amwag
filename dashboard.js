@@ -434,7 +434,7 @@ function getAllSettings() {
         promoImage: document.getElementById('setting-promo-image').value,
         promoVideo: document.getElementById('setting-promo-video').value,
         showPromo: document.getElementById('setting-show-promo').checked,
-        instagram: document.getElementById('setting-instagram').value,
+        snapchat: document.getElementById('setting-snapchat').value,
         tiktok: document.getElementById('setting-tiktok').value,
         popupTitle: document.getElementById('setting-popup-title').value,
         popupText: document.getElementById('setting-popup-text').value,
@@ -507,7 +507,7 @@ function loadSettingsFromObj(settings) {
     if (settings.promoVideo) document.getElementById('setting-promo-video').value = settings.promoVideo;
     if (settings.showPromo !== undefined) document.getElementById('setting-show-promo').checked = settings.showPromo;
 
-    if (settings.instagram) document.getElementById('setting-instagram').value = settings.instagram;
+    if (settings.snapchat) document.getElementById('setting-snapchat').value = settings.snapchat;
     if (settings.tiktok) document.getElementById('setting-tiktok').value = settings.tiktok;
     if (settings.popupTitle) document.getElementById('setting-popup-title').value = settings.popupTitle;
     if (settings.popupText) document.getElementById('setting-popup-text').value = settings.popupText;
@@ -940,14 +940,71 @@ let activeChatId = null;
 let activeChatListener = null;
 let adminChatsData = {};
 
+// Request Notification permission for admin page
+if ("Notification" in window) {
+    if (Notification.permission !== "granted" && Notification.permission !== "denied") {
+        Notification.requestPermission();
+    }
+}
+// Helper to notify admin of new customer messages
+window.adminNotifiedChats = window.adminNotifiedChats || new Set();
+function notifyAdminForNewMessage(chatId, info) {
+    if (!info || !info.lastMessage) return;
+    if (window.adminNotifiedChats.has(chatId)) return;
+    // Show notification
+    if ("Notification" in window && Notification.permission === "granted") {
+        const title = "رسالة جديدة من العميل";
+        const body = `${info.customerName || 'عميل'}: ${info.lastMessage}`;
+        new Notification(title, { body: body, icon: 'logo.png.jpeg', tag: 'admin-chat', data: { chatId } });
+    }
+    window.adminNotifiedChats.add(chatId);
+}
 function initAdminChat() {
     if (!isFirebaseEnabled || !db) return;
 
     db.ref('chats').on('value', snapshot => {
         const chats = snapshot.val();
         adminChatsData = chats || {};
+        // Notify for any chats with unreadByAdmin flag
+        Object.entries(adminChatsData).forEach(([id, chat]) => {
+            if (chat.info && chat.info.unreadByAdmin) {
+                notifyAdminForNewMessage(id, chat.info);
+            }
+        });
         renderAdminChatList(adminChatsData);
     });
+}
+function listenToChats() {
+    if (!isFirebaseEnabled || !db) return;
+
+    // Request Notification permission for admin page
+    if ("Notification" in window) {
+        if (Notification.permission !== "granted" && Notification.permission !== "denied") {
+            Notification.requestPermission();
+        }
+    }
+    // Helper to notify customer via service worker
+    window.showCustomerNotification = function(title, body, url, tag) {
+        if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+            navigator.serviceWorker.controller.postMessage({
+                type: 'SHOW_NOTIFICATION',
+                title: title,
+                body: body,
+                url: url || '/',
+                tag: tag || 'chat'
+            });
+        }
+    };
+
+    db.ref('chats').on('value', snapshot => {
+        const chats = snapshot.val();
+        adminChatsData = chats || {};
+        renderAdminChatList(adminChatsData);
+    });
+}
+
+function initMenuManagement() {
+    console.log("Menu management initialized");
 }
 
 function renderAdminChatList(chats) {
@@ -1129,6 +1186,12 @@ function sendAdminReply() {
         lastMessage: 'الإدارة: ' + text,
         lastActivity: Date.now()
     });
+    // Notify customer of admin reply
+    if (window.showCustomerNotification) {
+        window.showCustomerNotification('رد جديد من الدعم', text, '/', 'chat');
+    }
+    input.value = '';
+    input.focus();
 
     input.value = '';
     input.focus();

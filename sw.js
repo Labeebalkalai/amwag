@@ -1,4 +1,4 @@
-const CACHE_NAME = 'amwaj-v1';
+const CACHE_NAME = 'amwaj-v2';
 const assets = [
   '/',
   'index.html',
@@ -14,6 +14,11 @@ self.addEventListener('install', e => {
       return cache.addAll(assets);
     })
   );
+  self.skipWaiting();
+});
+
+self.addEventListener('activate', e => {
+  e.waitUntil(clients.claim());
 });
 
 self.addEventListener('fetch', e => {
@@ -24,12 +29,14 @@ self.addEventListener('fetch', e => {
   );
 });
 
-// Push Notification Support
+// =============================================
+// === Push Notification Handler (FCM/VAPID) ===
+// =============================================
 self.addEventListener('push', function(event) {
-  let data = { title: 'أمواج الصياد', body: 'تنبيه جديد من المطعم!' };
+  let data = { title: 'أمواج الصياد', body: 'تنبيه جديد!', url: '/', type: 'general' };
   if (event.data) {
     try {
-      data = event.data.json();
+      data = { ...data, ...event.data.json() };
     } catch (e) {
       data.body = event.data.text();
     }
@@ -39,11 +46,18 @@ self.addEventListener('push', function(event) {
     body: data.body,
     icon: 'logo.png.jpeg',
     badge: 'logo.png.jpeg',
-    vibrate: [100, 50, 100],
+    vibrate: [200, 100, 200],
+    tag: data.type || 'general',
+    renotify: true,
+    requireInteraction: true,
     data: {
-      dateOfArrival: Date.now(),
-      primaryKey: '1'
-    }
+      url: data.url || '/',
+      type: data.type
+    },
+    actions: [
+      { action: 'open', title: 'فتح' },
+      { action: 'close', title: 'إغلاق' }
+    ]
   };
 
   event.waitUntil(
@@ -51,9 +65,55 @@ self.addEventListener('push', function(event) {
   );
 });
 
+// =============================================
+// === Local Notification from Page Message  ===
+// =============================================
+self.addEventListener('message', function(event) {
+  if (event.data && event.data.type === 'SHOW_NOTIFICATION') {
+    const { title, body, url, tag, requireInteraction } = event.data;
+    const options = {
+      body: body || '',
+      icon: 'logo.png.jpeg',
+      badge: 'logo.png.jpeg',
+      vibrate: [200, 100, 200],
+      tag: tag || 'amwaj-notification',
+      renotify: true,
+      requireInteraction: requireInteraction !== false,
+      data: { url: url || '/' },
+      dir: 'rtl',
+      lang: 'ar'
+    };
+
+    event.waitUntil(
+      self.registration.showNotification(title, options)
+    );
+  }
+});
+
+// =============================================
+// === Notification Click Handler            ===
+// =============================================
 self.addEventListener('notificationclick', function(event) {
   event.notification.close();
+
+  if (event.action === 'close') return;
+
+  const targetUrl = event.notification.data?.url || '/';
+
   event.waitUntil(
-    clients.openWindow('/')
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(clientList) {
+      // If a window is already open, focus it and navigate
+      for (let i = 0; i < clientList.length; i++) {
+        const client = clientList[i];
+        if ('focus' in client) {
+          client.navigate(targetUrl);
+          return client.focus();
+        }
+      }
+      // Otherwise open a new window
+      if (clients.openWindow) {
+        return clients.openWindow(targetUrl);
+      }
+    })
   );
 });
