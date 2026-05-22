@@ -124,6 +124,16 @@ function dismissPrompt(el) {
 // === Core: Send Local Notification via SW        ===
 // =====================================================
 function sendLocalNotification(title, body, url = '/', tag = 'amwaj') {
+    // Check if running inside Android App via bridge
+    if (window.AndroidBridge && typeof window.AndroidBridge.showAndroidNotification === 'function') {
+        try {
+            window.AndroidBridge.showAndroidNotification(title, body);
+            return;
+        } catch (e) {
+            console.error('Android bridge notification failed:', e);
+        }
+    }
+
     if (!('Notification' in window)) return;
     if (Notification.permission !== 'granted') return;
 
@@ -447,6 +457,14 @@ function initCustomerChat() {
     const id = getChatId();
     // Helper to show admin notifications (if permission granted)
     window.showAdminNotification = function(title, body, url, tag) {
+        if (window.AndroidBridge && typeof window.AndroidBridge.showAndroidNotification === 'function') {
+            try {
+                window.AndroidBridge.showAndroidNotification(title, body);
+                return;
+            } catch (e) {
+                console.error('Android bridge notification failed:', e);
+            }
+        }
         if ("Notification" in window) {
             if (Notification.permission === "granted") {
                 new Notification(title, { body: body, icon: 'logo.png.jpeg', tag: tag, data: { url: url } });
@@ -461,6 +479,14 @@ function initCustomerChat() {
     };
     if (navigator.serviceWorker && navigator.serviceWorker.controller) {
         window.showCustomerNotification = function(title, body, url, tag) {
+            if (window.AndroidBridge && typeof window.AndroidBridge.showAndroidNotification === 'function') {
+                try {
+                    window.AndroidBridge.showAndroidNotification(title, body);
+                    return;
+                } catch (e) {
+                    console.error('Android bridge notification failed:', e);
+                }
+            }
             navigator.serviceWorker.controller.postMessage({
                 type: 'SHOW_NOTIFICATION',
                 title: title,

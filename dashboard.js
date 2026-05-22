@@ -951,10 +951,23 @@ window.adminNotifiedChats = window.adminNotifiedChats || new Set();
 function notifyAdminForNewMessage(chatId, info) {
     if (!info || !info.lastMessage) return;
     if (window.adminNotifiedChats.has(chatId)) return;
+    
+    const title = "رسالة جديدة من العميل";
+    const body = `${info.customerName || 'عميل'}: ${info.lastMessage}`;
+
+    // Check Android bridge first
+    if (window.AndroidBridge && typeof window.AndroidBridge.showAndroidNotification === 'function') {
+        try {
+            window.AndroidBridge.showAndroidNotification(title, body);
+            window.adminNotifiedChats.add(chatId);
+            return;
+        } catch (e) {
+            console.error('Android bridge notification failed:', e);
+        }
+    }
+
     // Show notification
     if ("Notification" in window && Notification.permission === "granted") {
-        const title = "رسالة جديدة من العميل";
-        const body = `${info.customerName || 'عميل'}: ${info.lastMessage}`;
         new Notification(title, { body: body, icon: 'logo.png.jpeg', tag: 'admin-chat', data: { chatId } });
     }
     window.adminNotifiedChats.add(chatId);
@@ -985,6 +998,14 @@ function listenToChats() {
     }
     // Helper to notify customer via service worker
     window.showCustomerNotification = function(title, body, url, tag) {
+        if (window.AndroidBridge && typeof window.AndroidBridge.showAndroidNotification === 'function') {
+            try {
+                window.AndroidBridge.showAndroidNotification(title, body);
+                return;
+            } catch (e) {
+                console.error('Android bridge notification failed:', e);
+            }
+        }
         if (navigator.serviceWorker && navigator.serviceWorker.controller) {
             navigator.serviceWorker.controller.postMessage({
                 type: 'SHOW_NOTIFICATION',
